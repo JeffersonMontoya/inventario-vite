@@ -5,7 +5,7 @@ node_modules/
 dist/
 dist-ssr/
 
-# Environment variables
+# Environment variables (Firebase)
 .env
 .env.*
 *.local
@@ -20,7 +20,7 @@ pnpm-debug.log*
 # Vite cache
 .vite/
 
-# Editor
+# Editor / OS
 .vscode/*
 !.vscode/extensions.json
 .idea/
