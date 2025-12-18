@@ -19,17 +19,35 @@
       </div>
     </nav>
 
-    <main class="main-content"></main>
+    <main class="main-content">
+      <header class="action-header">
+        <div class="text-group">
+          <h1 class="welcome-title">Panel de Inventario</h1>
+          <p class="welcome-subtitle">Gestiona tus productos en tiempo real</p>
+        </div>
+
+        <button class="btn-primary" @click="toogleForm">
+          <span class="btn-icon">＋</span> Nuevo Producto
+        </button>
+      </header>
+
+      <section v-if="showForm" class="form-section">
+        <ProductForm />
+      </section>
+    </main>
   </div>
 </template>
 
 <script setup>
-import { computed } from "vue";
 import { useUserStore } from "../stores/user";
 import { useRouter } from "vue-router";
+import { computed, ref } from "vue";
+import ProductForm from "../components/products/ProductForm.vue";
 
 const userStore = useUserStore();
 const router = useRouter();
+
+const showForm = ref(false);
 
 const userInitial = computed(() => {
   return userStore.userData?.email?.charAt(0).toUpperCase() || "U";
@@ -42,6 +60,10 @@ const handleLogout = async () => {
   } catch (error) {
     console.log(error);
   }
+};
+
+const toogleForm = () => {
+  showForm.value = !showForm.value;
 };
 </script>
 
@@ -148,6 +170,48 @@ const handleLogout = async () => {
   animation: fadeIn 0.6s ease-out;
 }
 
+.action-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 40px;
+  animation: fadeIn 0.8s ease-out;
+}
+
+.text-group {
+  text-align: left;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.4);
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 20px 25px -5px rgba(37, 99, 235, 0.5);
+  filter: brightness(1.1);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+.btn-icon {
+  font-size: 20px;
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -170,6 +234,8 @@ const handleLogout = async () => {
   font-size: 17px;
   color: #9ca3af;
 }
+
+
 
 @keyframes slideUp {
   from {
@@ -204,6 +270,15 @@ const handleLogout = async () => {
 
   .main-content {
     padding: 36px 16px;
+  }
+
+  .action-header {
+    flex-direction: column;
+    gap: 20px;
+    text-align: center;
+  }
+  .text-group {
+    text-align: center;
   }
 }
 </style>
