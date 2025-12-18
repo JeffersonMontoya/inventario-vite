@@ -19,38 +19,7 @@
       </div>
     </nav>
 
-    <main class="main-content">
-      <div class="welcome-section">
-        <h1 class="welcome-title">¡Bienvenido de vuelta! 👋</h1>
-        <p class="welcome-subtitle">Has iniciado sesión exitosamente</p>
-      </div>
-
-      <div class="cards-grid">
-        <div class="card">
-          <div class="card-icon">📊</div>
-          <h3>Dashboard</h3>
-          <p>Visualiza tus estadísticas y métricas</p>
-        </div>
-
-        <div class="card">
-          <div class="card-icon">⚙️</div>
-          <h3>Configuración</h3>
-          <p>Personaliza tu experiencia</p>
-        </div>
-
-        <div class="card">
-          <div class="card-icon">👥</div>
-          <h3>Comunidad</h3>
-          <p>Conecta con otros usuarios</p>
-        </div>
-
-        <div class="card">
-          <div class="card-icon">📚</div>
-          <h3>Recursos</h3>
-          <p>Aprende más sobre la plataforma</p>
-        </div>
-      </div>
-    </main>
+    <main class="main-content"></main>
   </div>
 </template>
 
@@ -202,13 +171,6 @@ const handleLogout = async () => {
   color: #9ca3af;
 }
 
-.cards-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 24px;
-  animation: slideUp 0.6s ease-out 0.2s both;
-}
-
 @keyframes slideUp {
   from {
     opacity: 0;
@@ -218,40 +180,6 @@ const handleLogout = async () => {
     opacity: 1;
     transform: translateY(0);
   }
-}
-
-.card {
-  background: #020617;
-  border-radius: 18px;
-  padding: 34px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.05);
-  transition: all 0.3s ease;
-  cursor: pointer;
-}
-
-.card:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 30px 60px rgba(37, 99, 235, 0.35),
-    inset 0 0 0 1px rgba(37, 99, 235, 0.4);
-}
-
-.card-icon {
-  font-size: 46px;
-  margin-bottom: 16px;
-}
-
-.card h3 {
-  font-size: 20px;
-  color: #f9fafb;
-  margin-bottom: 8px;
-  font-weight: 600;
-}
-
-.card p {
-  color: #9ca3af;
-  font-size: 14px;
-  line-height: 1.6;
 }
 
 @media (max-width: 768px) {
@@ -272,10 +200,6 @@ const handleLogout = async () => {
 
   .welcome-title {
     font-size: 30px;
-  }
-
-  .cards-grid {
-    grid-template-columns: 1fr;
   }
 
   .main-content {
