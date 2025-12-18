@@ -1,43 +1,3 @@
-<template>
-  <div class="home-container">
-    <nav class="navbar">
-      <div class="nav-content">
-        <div class="nav-brand">
-          <h2>Mi App</h2>
-        </div>
-        <div class="nav-actions">
-          <div class="user-info">
-            <div class="user-avatar">
-              {{ userInitial }}
-            </div>
-            <span class="user-email">{{ userStore.userData?.email }}</span>
-          </div>
-          <button @click="handleLogout" class="btn-logout">
-            Cerrar sesión
-          </button>
-        </div>
-      </div>
-    </nav>
-
-    <main class="main-content">
-      <header class="action-header">
-        <div class="text-group">
-          <h1 class="welcome-title">Panel de Inventario</h1>
-          <p class="welcome-subtitle">Gestiona tus productos en tiempo real</p>
-        </div>
-
-        <button class="btn-primary" @click="toogleForm">
-          <span class="btn-icon">＋</span> Nuevo Producto
-        </button>
-      </header>
-
-      <section v-if="showForm" class="form-section">
-        <ProductForm />
-      </section>
-    </main>
-  </div>
-</template>
-
 <script setup>
 import { useUserStore } from "../stores/user";
 import { useRouter } from "vue-router";
@@ -66,6 +26,48 @@ const toogleForm = () => {
   showForm.value = !showForm.value;
 };
 </script>
+
+<template>
+  <div class="home-container">
+    <nav class="navbar">
+      <div class="nav-content">
+        <div class="nav-brand">
+          <h2>Mi App</h2>
+        </div>
+        <div class="nav-actions">
+          <div class="user-info">
+            <div class="user-avatar">
+              {{ userInitial }}
+            </div>
+            <span class="user-email">{{ userStore.userData?.email }}</span>
+          </div>
+          <button @click="handleLogout" class="btn-logout">
+            Cerrar sesión
+          </button>
+        </div>
+      </div>
+    </nav>
+
+    <main class="main-content">
+      <header class="action-header">
+        <div class="text-group">
+          <h1 class="welcome-title">Panel de Inventario</h1>
+        </div>
+
+        <button class="btn-primary" @click="toogleForm">
+          <span class="btn-icon">{{ showForm ? "✕" : "＋" }}</span>
+          {{ showForm ? "Cancelar" : "Nuevo Producto" }}
+        </button>
+      </header>
+
+      <Transition name="slide">
+        <section v-if="showForm" class="form-container-inline">
+          <ProductForm @close="toogleForm" />
+        </section>
+      </Transition>
+    </main>
+  </div>
+</template>
 
 <style scoped>
 * {
@@ -180,6 +182,7 @@ const toogleForm = () => {
 
 .text-group {
   text-align: left;
+  margin-top: 10px;
 }
 
 .btn-primary {
@@ -211,6 +214,34 @@ const toogleForm = () => {
 .btn-icon {
   font-size: 20px;
 }
+.form-container-inline {
+  background: rgba(30, 41, 59, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 28px;
+  margin-top: -30px;
+  margin-bottom: 30px;
+
+  width: 100%;
+  max-width: 480px;
+  margin-left: 0;
+
+  overflow: hidden;
+  animation: slideDown 0.4s ease-out;
+}
+
+.slide-enter-active,
+.slide-leave-active {
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  max-height: 500px;
+}
+
+.slide-enter-from,
+.slide-leave-to {
+  opacity: 0;
+  max-height: 0;
+  transform: translateY(-10px);
+}
 
 @keyframes fadeIn {
   from {
@@ -229,13 +260,6 @@ const toogleForm = () => {
   font-weight: 700;
   margin-bottom: 10px;
 }
-
-.welcome-subtitle {
-  font-size: 17px;
-  color: #9ca3af;
-}
-
-
 
 @keyframes slideUp {
   from {
