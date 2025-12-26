@@ -3,6 +3,7 @@ import { useUserStore } from "../stores/user";
 import { useRouter } from "vue-router";
 import { computed, ref } from "vue";
 import ProductForm from "../components/products/ProductForm.vue";
+import StatsDashboard from "../components/products/StatsDashboard.vue";
 
 const userStore = useUserStore();
 const router = useRouter();
@@ -32,7 +33,7 @@ const toogleForm = () => {
     <nav class="navbar">
       <div class="nav-content">
         <div class="nav-brand">
-          <h2>Mi App</h2>
+          <h2>Inventario</h2>
         </div>
         <div class="nav-actions">
           <div class="user-info">
@@ -53,17 +54,19 @@ const toogleForm = () => {
         <div class="text-group">
           <h1 class="welcome-title">Panel de Inventario</h1>
         </div>
-
         <button class="btn-primary" @click="toogleForm">
-          <span class="btn-icon">{{ showForm ? "✕" : "＋" }}</span>
-          {{ showForm ? "Cancelar" : "Nuevo Producto" }}
+          <span class="btn-icon">＋</span> Nuevo Producto
         </button>
       </header>
 
-      <Transition name="slide">
-        <section v-if="showForm" class="form-container-inline">
-          <ProductForm @close="toogleForm" />
-        </section>
+      <StatsDashboard />
+
+      <Transition name="fade">
+        <div v-if="showForm" class="modal-overlay" @click.self="toogleForm">
+          <div class="modal-content">
+            <ProductForm @close="toogleForm" />
+          </div>
+        </div>
       </Transition>
     </main>
   </div>
@@ -214,33 +217,54 @@ const toogleForm = () => {
 .btn-icon {
   font-size: 20px;
 }
-.form-container-inline {
-  background: rgba(30, 41, 59, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 16px;
-  padding: 28px;
-  margin-top: -30px;
-  margin-bottom: 30px;
 
+/* MODAL MODAL  */
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
   width: 100%;
-  max-width: 480px;
-  margin-left: 0;
-
-  overflow: hidden;
-  animation: slideDown 0.4s ease-out;
+  height: 100%;
+  background: rgba(2, 6, 23, 0.85);
+  backdrop-filter: blur(6px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  padding: 20px;
 }
 
-.slide-enter-active,
-.slide-leave-active {
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  max-height: 500px;
+.modal-content {
+  background: #1e293b;
+  width: 100%;
+  max-width: 500px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  padding: 10px;
+  animation: modalPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-.slide-enter-from,
-.slide-leave-to {
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
   opacity: 0;
-  max-height: 0;
-  transform: translateY(-10px);
+}
+
+@keyframes modalPop {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
 }
 
 @keyframes fadeIn {

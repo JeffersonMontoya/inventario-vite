@@ -12,14 +12,18 @@ export const useUserStore = defineStore("user", {
   state: () => ({
     userData: null,
     loadingUser: false,
-    authReady: false, // 👈 Agregar esto
+    authReady: false, 
   }),
 
   actions: {
     async registerUser(email, password) {
       this.loadingUser = true;
       try {
-        const { user } = await createUserWithEmailAndPassword(auth, email, password);
+        const { user } = await createUserWithEmailAndPassword(
+          auth,
+          email,
+          password
+        );
         this.userData = { email: user.email, uid: user.uid };
       } finally {
         this.loadingUser = false;
@@ -29,7 +33,11 @@ export const useUserStore = defineStore("user", {
     async loginUser(email, password) {
       this.loadingUser = true;
       try {
-        const { user } = await signInWithEmailAndPassword(auth, email, password);
+        const { user } = await signInWithEmailAndPassword(
+          auth,
+          email,
+          password
+        );
         this.userData = { email: user.email, uid: user.uid };
       } finally {
         this.loadingUser = false;
@@ -42,7 +50,7 @@ export const useUserStore = defineStore("user", {
     },
 
     listenAuthState() {
-      return new Promise((resolve) => { // 👈 Retornar Promise
+      return new Promise((resolve) => {
         onAuthStateChanged(auth, (user) => {
           if (user) {
             this.userData = { email: user.email, uid: user.uid };
@@ -50,9 +58,9 @@ export const useUserStore = defineStore("user", {
             this.userData = null;
           }
           this.authReady = true;
-          resolve(); // 👈 Resolver cuando Firebase responda
+          resolve(); // Resolver cuando Firebase responda
         });
       });
     },
   },
-});            
+});

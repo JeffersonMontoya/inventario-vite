@@ -1,11 +1,19 @@
 import { defineStore } from "pinia";
+import {
+  collection,
+  addDoc,
+  serverTimestamp,
+  getDocs,
+  query,
+} from "firebase/firestore";
 import { db, auth } from "../firebase";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 
 export const useProductStore = defineStore("product", {
   state: () => ({
     loading: false,
+    products: [], 
   }),
+
   actions: {
     async addProduct(name, price, stock) {
       this.loading = true;
@@ -29,5 +37,23 @@ export const useProductStore = defineStore("product", {
         this.loading = false;
       }
     },
+
+    async getProducts() {
+      this.loading = true;
+      try {
+        const q = query(collection(db, "products"));
+        const querySnapshot = await getDocs(q);
+    
+        this.products = querySnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+      } catch (error) {
+        console.error("Error al obtener productos:", error);
+      } finally {
+        this.loading = false;
+      }
+    }
+    
   },
 });

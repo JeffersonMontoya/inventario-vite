@@ -13,15 +13,13 @@ const handleSubmit = async () => {
   try {
     await productStore.addProduct(name.value, price.value, stock.value);
 
-    // 1. Mostrar el éxito
     isSuccess.value = true;
 
-    // 2. Limpiar campos
+    
     name.value = "";
     price.value = null;
     stock.value = null;
 
-    // 3. Quitar el mensaje después de 3 segundos
     setTimeout(() => {
       isSuccess.value = false;
     }, 3000);
@@ -101,12 +99,14 @@ const handleSubmit = async () => {
 h3 {
   color: #ffffff;
   margin-bottom: 28px;
-  font-size: 1.4rem;
+  font-size: 1.8rem;
   font-weight: 700;
   letter-spacing: -0.5px;
   position: relative;
   padding-bottom: 10px;
+  text-align: center;
 }
+
 
 h3::after {
   content: "";
