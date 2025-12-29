@@ -11,7 +11,7 @@ import { db, auth } from "../firebase";
 export const useProductStore = defineStore("product", {
   state: () => ({
     loading: false,
-    products: [], 
+    products: [],
   }),
 
   actions: {
@@ -28,11 +28,19 @@ export const useProductStore = defineStore("product", {
           createdAt: serverTimestamp(),
         };
 
-        await addDoc(colRef, newProduct);
+        const docRef = await addDoc(colRef, newProduct);
 
-        console.log("Producto guardado con éxito");
+        this.products.unshift({
+          id: docRef.id,
+          ...newProduct,
+          createdAt: new Date(),
+        });
+
+        console.log("Producto guardado y UI actualizada");
+        return true;
       } catch (error) {
         console.error("Error al guardar producto:", error);
+        return false;
       } finally {
         this.loading = false;
       }
@@ -43,8 +51,8 @@ export const useProductStore = defineStore("product", {
       try {
         const q = query(collection(db, "products"));
         const querySnapshot = await getDocs(q);
-    
-        this.products = querySnapshot.docs.map(doc => ({
+
+        this.products = querySnapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
         }));
@@ -53,7 +61,6 @@ export const useProductStore = defineStore("product", {
       } finally {
         this.loading = false;
       }
-    }
-    
+    },
   },
 });

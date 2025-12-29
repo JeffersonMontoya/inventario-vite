@@ -4,6 +4,16 @@ import { useRouter } from "vue-router";
 import { computed, ref } from "vue";
 import ProductForm from "../components/products/ProductForm.vue";
 import StatsDashboard from "../components/products/StatsDashboard.vue";
+import {onMounted} from 'vue'
+import { useProductStore } from "../stores/product";
+import ProductCard from "../components/products/ProductCard.vue";
+
+const productStore = useProductStore();
+
+
+onMounted(() => {
+  productStore.getProducts();
+});
 
 const userStore = useUserStore();
 const router = useRouter();
@@ -60,6 +70,24 @@ const toogleForm = () => {
       </header>
 
       <StatsDashboard />
+
+      <section class="products-container">
+  <div v-if="productStore.loading" class="loading-state">
+    Cargando inventario...
+  </div>
+
+  <div v-else-if="productStore.products.length > 0" class="products-grid">
+    <ProductCard 
+      v-for="product in productStore.products" 
+      :key="product.id" 
+      :product="product" 
+    />
+  </div>
+
+  <div v-else class="empty-state">
+    <p>No hay productos en el inventario. ¡Agrega el primero!</p>
+  </div>
+</section>
 
       <Transition name="fade">
         <div v-if="showForm" class="modal-overlay" @click.self="toogleForm">
@@ -265,6 +293,29 @@ const toogleForm = () => {
     opacity: 1;
     transform: scale(1) translateY(0);
   }
+}
+
+.products-container {
+  margin-top: 40px;
+}
+
+.products-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 25px;
+}
+
+.loading-state, .empty-state {
+  text-align: center;
+  padding: 60px;
+  color: #94a3b8;
+  background: rgba(30, 41, 59, 0.2);
+  border-radius: 20px;
+  border: 1px dashed rgba(255, 255, 255, 0.1);
+}
+
+.products-grid > * {
+  animation: fadeIn 0.5s ease-out forwards;
 }
 
 @keyframes fadeIn {
