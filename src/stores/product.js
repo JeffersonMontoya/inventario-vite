@@ -5,6 +5,8 @@ import {
   serverTimestamp,
   getDocs,
   query,
+  doc,
+  deleteDoc,
 } from "firebase/firestore";
 import { db, auth } from "../firebase";
 
@@ -62,5 +64,18 @@ export const useProductStore = defineStore("product", {
         this.loading = false;
       }
     },
+
+    async deleteProducts(id) {
+      try {
+        const docRef = doc(db , 'products' , id)
+        await deleteDoc(docRef)
+        this.products = this.products.filter((item) => item.id !== id);
+        
+      } catch (error) {
+        console.log(error)
+      }finally{
+      
+      }
+    }
   },
 });
