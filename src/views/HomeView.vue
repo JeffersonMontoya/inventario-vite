@@ -4,12 +4,11 @@ import { useRouter } from "vue-router";
 import { computed, ref } from "vue";
 import ProductForm from "../components/products/ProductForm.vue";
 import StatsDashboard from "../components/products/StatsDashboard.vue";
-import {onMounted} from 'vue'
+import { onMounted } from "vue";
 import { useProductStore } from "../stores/product";
 import ProductCard from "../components/products/ProductCard.vue";
 
 const productStore = useProductStore();
-
 
 onMounted(() => {
   productStore.getProducts();
@@ -69,25 +68,25 @@ const toogleForm = () => {
         </button>
       </header>
 
-      <StatsDashboard />
+      <!-- <StatsDashboard /> -->
 
       <section class="products-container">
-  <div v-if="productStore.loading" class="loading-state">
-    Cargando inventario...
-  </div>
+        <div v-if="productStore.loading" class="loading-state">
+          Cargando inventario...
+        </div>
 
-  <div v-else-if="productStore.products.length > 0" class="products-grid">
-    <ProductCard 
-      v-for="product in productStore.products" 
-      :key="product.id" 
-      :product="product" 
-    />
-  </div>
+        <div v-else-if="productStore.products.length > 0" class="products-grid">
+          <ProductCard
+            v-for="product in productStore.products"
+            :key="product.id"
+            :product="product"
+          />
+        </div>
 
-  <div v-else class="empty-state">
-    <p>No hay productos en el inventario. ¡Agrega el primero!</p>
-  </div>
-</section>
+        <div v-else class="empty-state">
+          <p>No hay productos en el inventario. ¡Agrega el primero!</p>
+        </div>
+      </section>
 
       <Transition name="fade">
         <div v-if="showForm" class="modal-overlay" @click.self="toogleForm">
@@ -305,7 +304,8 @@ const toogleForm = () => {
   gap: 25px;
 }
 
-.loading-state, .empty-state {
+.loading-state,
+.empty-state {
   text-align: center;
   padding: 60px;
   color: #94a3b8;

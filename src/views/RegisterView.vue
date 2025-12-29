@@ -1,37 +1,42 @@
 <template>
-  <div class="register-container">
-    <div class="register-card">
-      <div class="register-header">
-        <h1>Crear Cuenta</h1>
-        <p>Únete a nosotros hoy</p>
+  <div class="min-h-screen flex items-center justify-center bg-[radial-gradient(circle_at_top,_#1e293b_0%,_#020617_70%)] p-[20px]">
+    
+    <div class="bg-[#020617] rounded-[22px] w-full max-w-[420px] p-[34px_26px] sm:p-[42px] shadow-[0_30px_80px_rgba(0,0,0,0.8),inset_0_0_0_1px_rgba(255,255,255,0.05)] animate-[slideUp_0.5s_ease-out]">
+      
+      <div class="text-center mb-[34px]">
+        <h1 class="text-[26px] sm:text-[30px] text-[#f9fafb] font-bold mb-[6px]">Crear Cuenta</h1>
+        <p class="text-[#9ca3af] text-[15px]">Únete a nosotros hoy</p>
       </div>
 
-      <form @submit.prevent="handleSubmit" class="register-form">
-        <div class="input-group">
-          <label for="email">Correo electrónico</label>
+      <form @submit.prevent="handleSubmit" class="flex flex-col gap-[22px]">
+        
+        <div class="flex flex-col gap-[6px]">
+          <label for="email" class="text-[13px] font-semibold text-[#cbd5f5]">Correo electrónico</label>
           <input
             id="email"
             type="email"
             placeholder="ejemplo@correo.com"
             v-model="email"
             required
+            class="p-[14px_16px] rounded-[12px] border border-[#1e293b] bg-[#020617] text-[#f9fafb] text-[15px] outline-none transition-all duration-[0.25s] hover:border-[#334155] focus:border-[#2563eb] focus:shadow-[0_0_0_3px_rgba(37,99,235,0.25)] placeholder:text-[#64748b]"
           />
         </div>
 
-        <div class="input-group">
-          <label for="password">Contraseña</label>
+        <div class="flex flex-col gap-[6px]">
+          <label for="password" class="text-[13px] font-semibold text-[#cbd5f5]">Contraseña</label>
           <input
             id="password"
             type="password"
             placeholder="Mínimo 6 caracteres"
             v-model="password"
             required
+            class="p-[14px_16px] rounded-[12px] border border-[#1e293b] bg-[#020617] text-[#f9fafb] text-[15px] outline-none transition-all duration-[0.25s] hover:border-[#334155] focus:border-[#2563eb] focus:shadow-[0_0_0_3px_rgba(37,99,235,0.25)] placeholder:text-[#64748b]"
           />
         </div>
 
         <button
           type="submit"
-          class="btn-primary"
+          class="mt-[14px] p-[15px] bg-[linear-gradient(135deg,#2563eb,#1d4ed8)] text-white border-none rounded-[14px] text-[16px] font-semibold cursor-pointer transition-all duration-[0.25s] shadow-[0_12px_25px_rgba(37,99,235,0.45)] hover:not-disabled:-translate-y-[2px] hover:not-disabled:shadow-[0_18px_35px_rgba(37,99,235,0.6)] active:not-disabled:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed"
           :disabled="userStore.loadingUser"
         >
           <span v-if="!userStore.loadingUser">Crear Usuario</span>
@@ -39,9 +44,9 @@
         </button>
       </form>
 
-      <div class="register-footer">
-        <p>¿Ya tienes cuenta?</p>
-        <router-link to="/" class="link-login">
+      <div class="mt-[32px] text-center">
+        <p class="text-[#9ca3af] text-[14px] mb-[6px]">¿Ya tienes cuenta?</p>
+        <router-link to="/" class="text-[#3b82f6] no-underline font-semibold text-[15px] transition-all duration-[0.25s] hover:text-[#60a5fa] hover:underline">
           Inicia sesión aquí
         </router-link>
       </div>
@@ -75,33 +80,8 @@ const handleSubmit = async () => {
 };
 </script>
 
-<style scoped>
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-.register-container {
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: radial-gradient(circle at top, #1e293b 0%, #020617 70%);
-  padding: 20px;
-}
-
-.register-card {
-  background: #020617;
-  border-radius: 22px;
-  width: 100%;
-  max-width: 420px;
-  padding: 42px;
-  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.8),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.05);
-  animation: slideUp 0.5s ease-out;
-}
-
+<style>
+/* Animación slideUp */
 @keyframes slideUp {
   from {
     opacity: 0;
@@ -110,127 +90,6 @@ const handleSubmit = async () => {
   to {
     opacity: 1;
     transform: translateY(0);
-  }
-}
-
-.register-header {
-  text-align: center;
-  margin-bottom: 34px;
-}
-
-.register-header h1 {
-  font-size: 30px;
-  color: #f9fafb;
-  font-weight: 700;
-  margin-bottom: 6px;
-}
-
-.register-header p {
-  color: #9ca3af;
-  font-size: 15px;
-}
-
-.register-form {
-  display: flex;
-  flex-direction: column;
-  gap: 22px;
-}
-.input-group {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.input-group label {
-  font-size: 13px;
-  font-weight: 600;
-  color: #cbd5f5;
-}
-
-.input-group input {
-  padding: 14px 16px;
-  border-radius: 12px;
-  border: 1px solid #1e293b;
-  background: #020617;
-  color: #f9fafb;
-  font-size: 15px;
-  transition: all 0.25s ease;
-  outline: none;
-}
-
-.input-group input::placeholder {
-  color: #64748b;
-}
-
-.input-group input:hover {
-  border-color: #334155;
-}
-
-.input-group input:focus {
-  border-color: #2563eb;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.25);
-}
-
-.btn-primary {
-  margin-top: 14px;
-  padding: 15px;
-  background: linear-gradient(135deg, #2563eb, #1d4ed8);
-  color: #ffffff;
-  border: none;
-  border-radius: 14px;
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.25s ease;
-  box-shadow: 0 12px 25px rgba(37, 99, 235, 0.45);
-}
-
-.btn-primary:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 18px 35px rgba(37, 99, 235, 0.6);
-}
-
-.btn-primary:active:not(:disabled) {
-  transform: translateY(0);
-}
-
-.btn-primary:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.register-footer {
-  margin-top: 32px;
-  text-align: center;
-}
-
-.register-footer p {
-  color: #9ca3af;
-  font-size: 14px;
-  margin-bottom: 6px;
-}
-
-.link-login {
-  color: #3b82f6;
-  text-decoration: none;
-  font-weight: 600;
-  font-size: 15px;
-  transition: all 0.25s ease;
-}
-
-.link-login:hover {
-  color: #60a5fa;
-  text-decoration: underline;
-}
-
-/* ===== RESPONSIVE ===== */
-@media (max-width: 480px) {
-  .register-card {
-    padding: 34px 26px;
-  }
-
-  .register-header h1 {
-    font-size: 26px;
   }
 }
 </style>
