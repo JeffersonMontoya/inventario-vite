@@ -51,19 +51,27 @@
           class="flex flex-wrap justify-center w-full gap-4 md:justify-end md:w-auto"
         >
           <button
+            v-if="userStore.role === 'admin' || userStore.role === 'bodega'"
             class="bg-gradient-to-br from-[#2563eb] to-[#1d4ed8] text-white px-6 py-3 rounded-xl font-bold text-[15px] flex items-center gap-2.5 transition-all duration-300 shadow-[0_10px_15px_-3px_rgba(37,99,235,0.4)] hover:-translate-y-0.5 hover:shadow-[0_20px_25px_-5px_rgba(37,99,235,0.5)] hover:brightness-110 active:translate-y-0"
             @click="toogleForm"
           >
-            <span class="text-[20px]">＋</span> Nuevo Producto
+            <span class="text-[20px]">＋</span>
+
+            <span>
+              {{
+                userStore.role === "admin"
+                  ? "Nuevo Producto"
+                  : "Ingresar Mercancía"
+              }}
+            </span>
           </button>
- <button
+          <button
             v-if="userStore.role === 'admin'"
             @click="toogleAdminForm"
             class="bg-gradient-to-br from-emerald-600 to-emerald-700 text-white px-6 py-3 rounded-xl font-bold text-[15px] flex items-center gap-2.5 transition-all duration-300 shadow-[0_10px_15px_-3px_rgba(16,185,129,0.4)] hover:-translate-y-0.5 hover:shadow-[0_20px_25px_-5px_rgba(16,185,129,0.5)] hover:brightness-110 active:translate-y-0"
           >
             <span class="text-[20px]">👥</span> Registrar Personal
           </button>
-         
         </div>
       </header>
       <p class="text-white">
@@ -171,7 +179,6 @@ const toogleForm = () => {
 const toogleAdminForm = () => {
   showAdminForm.value = !showAdminForm.value;
 };
-
 </script>
 
 <style scoped>
