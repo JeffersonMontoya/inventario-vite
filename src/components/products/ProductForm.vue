@@ -1,7 +1,14 @@
 <template>
   <div class="max-w-[480px] text-left relative">
-    <h3 class="text-white mb-7 text-[1.8rem] font-bold tracking-tight relative pb-2.5 text-center 
-               after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-10 after:height-[3px] after:bg-blue-600 after:rounded-sm">
+    <button 
+      type="button"
+      @click="$emit('close')" 
+      class="absolute -top-2 -right-2 text-slate-400 hover:text-white hover:bg-white/10 w-9 h-9 rounded-full flex items-center justify-center transition-all z-20"
+    >
+      <span class="text-2xl">&times;</span>
+    </button>
+
+    <h3 class="text-white mb-7 text-[1.8rem] font-bold tracking-tight relative pb-2.5 text-center ...">
       Agregar Producto
     </h3>
 
@@ -81,6 +88,7 @@ const name = ref("");
 const price = ref(null);
 const stock = ref(null);
 const isSuccess = ref(false);
+
 
 const handleSubmit = async () => {
   try {
