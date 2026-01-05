@@ -16,7 +16,25 @@ export const useProductStore = defineStore("product", {
   state: () => ({
     loading: false,
     products: [],
+    MIN_STOCK_THRESHOLD: 5,
   }),
+
+  getters: {
+    // Qué productos están bajos
+    lowStockProducts: (state) => {
+      return state.products.filter(p => p.stock <= state.MIN_STOCK_THRESHOLD && p.stock > 0);
+    },
+    // Qué productos están agotados?
+    outOfStockProducts: (state) => {
+      return state.products.filter(p => p.stock <= 0);
+    },
+    // Resumen para el dashboard
+    stockMetrics: (state) => ({
+      total: state.products.length,
+      lowCount: state.products.filter(p => p.stock <= state.MIN_STOCK_THRESHOLD && p.stock > 0).length,
+      outCount: state.products.filter(p => p.stock <= 0).length
+    })
+  },
 
   actions: {
     async getProducts() {
