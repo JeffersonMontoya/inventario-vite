@@ -58,14 +58,17 @@
           </button>
 
           <button
-          v-if="userStore.role === 'admin'"
+            v-if="userStore.role === 'admin'"
+            @click="toogleAdminForm"
             class="bg-gradient-to-br from-emerald-600 to-emerald-700 text-white px-6 py-3 rounded-xl font-bold text-[15px] flex items-center gap-2.5 transition-all duration-300 shadow-[0_10px_15px_-3px_rgba(16,185,129,0.4)] hover:-translate-y-0.5 hover:shadow-[0_20px_25px_-5px_rgba(16,185,129,0.5)] hover:brightness-110 active:translate-y-0"
           >
             <span class="text-[20px]">👥</span> Gestionar Personal
           </button>
         </div>
       </header>
-      <p class="text-white">Tu rol actual es: {{ userStore.role || 'Sin rol asignado' }}</p>
+      <p class="text-white">
+        Tu rol actual es: {{ userStore.role || "Sin rol asignado" }}
+      </p>
 
       <section class="mt-10">
         <div
@@ -108,6 +111,20 @@
           </div>
         </div>
       </Transition>
+
+      <Transition name="fade">
+        <div
+          v-if="showAdminForm"
+          class="fixed inset-0 bg-[#020617]/85 backdrop-blur-[6px] flex justify-center items-center z-[9999] p-5"
+          @click.self="toggleAdminForm"
+        >
+          <div
+            class="bg-[#1e293b] w-full max-w-[450px] rounded-[20px] border border-white/10 shadow-2xl animate-[modalPop_0.3s_ease-out]"
+          >
+            <AdminUserForm @close="toggleAdminForm" />
+          </div>
+        </div>
+      </Transition>
     </main>
   </div>
 </template>
@@ -119,6 +136,7 @@ import { computed, ref, onMounted } from "vue";
 import ProductForm from "../components/products/ProductForm.vue";
 import { useProductStore } from "../stores/product";
 import ProductCard from "../components/products/ProductCard.vue";
+import AdminUserForm from "../components/admin/AdminUserForm.vue";
 
 const productStore = useProductStore();
 
@@ -130,6 +148,8 @@ const userStore = useUserStore();
 const router = useRouter();
 
 const showForm = ref(false);
+
+const showAdminForm = ref(false);
 
 const userInitial = computed(() => {
   return userStore.userData?.email?.charAt(0).toUpperCase() || "U";
@@ -147,6 +167,11 @@ const handleLogout = async () => {
 const toogleForm = () => {
   showForm.value = !showForm.value;
 };
+
+const toogleAdminForm = () => {
+  showAdminForm.value = !showAdminForm.value;
+};
+
 </script>
 
 <style scoped>

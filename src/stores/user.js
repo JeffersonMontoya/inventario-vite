@@ -7,7 +7,7 @@ import {
   signOut,
   onAuthStateChanged,
 } from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc , setDoc } from "firebase/firestore";
 
 export const useUserStore = defineStore("user", {
   state: () => ({
@@ -18,7 +18,7 @@ export const useUserStore = defineStore("user", {
   }),
 
   actions: {
-    async registerUser(email, password) {
+    async registerUser(email, password, role) {
       this.loadingUser = true;
       try {
         const { user } = await createUserWithEmailAndPassword(
@@ -26,12 +26,22 @@ export const useUserStore = defineStore("user", {
           email,
           password
         );
-        this.userData = { email: user.email, uid: user.uid };
+
+        await setDoc(doc(db, "users", user.uid), {
+          email: email,
+          uid: user.uid,
+          role: role,
+          createdAt: new Date(),
+        });
+
+        console.log(`Usuario ${email} registrado como ${role}`);
+      } catch (error) {
+        console.error("Error al registrar:", error);
+        throw error;
       } finally {
         this.loadingUser = false;
       }
     },
-
     async loginUser(email, password) {
       this.loadingUser = true;
       try {
