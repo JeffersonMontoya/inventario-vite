@@ -1,34 +1,37 @@
 // router/index.js
-import { createWebHistory, createRouter } from "vue-router";
+import { createRouter, createWebHistory } from "vue-router";
+import { useUserStore } from "../stores/user";
 import LoginView from "../views/LoginView.vue";
 import HomeView from "../views/HomeView.vue";
-import { useUserStore } from "../stores/user";
+import LandingPage from "../views/LandingPage.vue";
 
 const routes = [
-  { path: "/", component: LoginView, meta: { guest: true } },
+  { path: "/", component: LandingPage, meta: { guest: true } },
+  { path: "/login", component: LoginView, meta: { guest: true } },
   { path: "/home", component: HomeView, meta: { requiresAuth: true } },
 ];
 
 const router = createRouter({
-  history: createWebHistory(),
+  history: createWebHistory(import.meta.env.BASE_URL),
   routes,
 });
 
-router.beforeEach(async (to) => {
+router.beforeEach(async (to, from, next) => {
   const userStore = useUserStore();
 
-  //  Esperar a que Firebase esté listo
-  if (!userStore.authReady) {
-    await userStore.listenAuthState(); 
-  }
-
-  //  Proteger rutas
-  if (to.meta.requiresAuth && !userStore.userData) {
-    return "/";
-  }
-
-  if (to.meta.guest && userStore.userData) {
-    return "/home";
+  // Simple session check
+  if (!userStore.user && to.meta.requiresAuth) {
+    // If not loaded yet, wait a bit or redirect
+    const currentUser = await userStore.listenAuthState();
+    if (currentUser) {
+      next();
+    } else {
+      next("/login");
+    }
+  } else if (userStore.user && to.meta.guest) {
+    next("/home");
+  } else {
+    next();
   }
 });
 

@@ -1,60 +1,91 @@
 <template>
   <div
-    class="flex flex-col gap-[15px] p-5 bg-slate-800/40 border border-white/[0.08] rounded-[20px] transition-all duration-300 hover:-translate-y-[5px] hover:bg-slate-800/60 hover:border-blue-600/50 hover:shadow-[0_10px_20px_rgba(0,0,0,0.2)]"
+    class="flex flex-col gap-4 p-6 bg-white border border-gray-100 rounded-3xl transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-orange-100/50 group h-full"
   >
-    <div class="flex justify-between items-center mt-4">
+    <div class="flex justify-between items-start">
+      <!-- Badge Categoría -->
+      <span
+        class="bg-gray-50 text-gray-400 text-[10px] font-bold px-2 py-1 rounded-lg uppercase tracking-wider border border-gray-100"
+      >
+        {{ product.category || "General" }}
+      </span>
+
       <div class="flex items-center gap-2">
         <button
           v-if="userStore.role !== 'vendedor'"
           @click="handleUpdateStock(-1)"
           :disabled="product.stock <= 0"
-          class="w-8 h-8 rounded-lg bg-slate-800 border border-white/10 hover:bg-red-500/20 text-white transition-all disabled:opacity-20 disabled:cursor-not-allowed"
+          class="w-8 h-8 rounded-lg bg-gray-100 hover:bg-red-50 hover:text-red-500 text-gray-500 transition-all disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center font-bold"
         >
           -
         </button>
 
         <span
           :class="stockColorClass"
-          class="font-bold text-xs px-3 py-1 rounded-full bg-opacity-10 border border-current transition-colors duration-500"
+          class="font-bold text-xs px-3 py-1.5 rounded-full transition-colors duration-500 flex items-center gap-1"
         >
-          {{ product.stock > 0 ? product.stock + " unidades" : "Agotado" }}
+          <span class="w-1.5 h-1.5 rounded-full bg-current inline-block"></span>
+          {{ product.stock }} {{ getUnitAbbr(product.unit) }}
         </span>
 
         <button
           v-if="userStore.role !== 'vendedor'"
           @click="handleUpdateStock(1)"
-          class="w-8 h-8 rounded-lg bg-slate-800 border border-white/10 hover:bg-emerald-500/20 text-white transition-all"
+          class="w-8 h-8 rounded-lg bg-gray-100 hover:bg-green-50 hover:text-green-500 text-gray-500 transition-all flex items-center justify-center font-bold"
         >
           +
         </button>
       </div>
     </div>
 
-    <div>
-      <h3 class="text-[#f9fafb] text-[18px] font-semibold mb-1">
+    <div class="flex-grow">
+      <h3
+        class="text-gelato-chocolate text-lg font-playfair font-bold mb-1 leading-tight group-hover:text-orange-500 transition-colors"
+      >
         {{ product.name }}
       </h3>
-      <p class="text-blue-400 text-[22px] font-bold">
+      <p class="text-gray-400 text-2xl font-bold font-poppins">
         {{ formatPrice(product.price) }}
       </p>
-    </div>
-
-    <div
-      v-if="userStore.role === 'admin' || userStore.role === 'bodega'"
-      class="flex justify-end gap-2.5 mt-auto pt-[15px] border-t border-white/[0.05]"
-    >
       <button
-        class="bg-none border-none cursor-pointer text-[16px] p-[5px] rounded-lg transition-colors duration-200 hover:bg-white/10"
+        class="text-gray-400 hover:text-blue-500 p-2 rounded-lg transition-colors duration-200 hover:bg-blue-50"
         title="Editar"
+        @click="$emit('edit', product)"
       >
-        ✏️
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-5 w-5"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+          />
+        </svg>
       </button>
       <button
-        class="bg-none border-none cursor-pointer text-[16px] p-[5px] rounded-lg transition-colors duration-200 hover:bg-red-500/10"
+        class="text-gray-400 hover:text-red-500 p-2 rounded-lg transition-colors duration-200 hover:bg-red-50"
         title="Eliminar"
         @click="handleDelete(product.id)"
       >
-        🗑️
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-5 w-5"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+          />
+        </svg>
       </button>
     </div>
   </div>
@@ -64,9 +95,9 @@
 import { useProductStore } from "../../stores/product";
 import { useUserStore } from "../../stores/user";
 import { computed } from "vue";
+import Swal from "sweetalert2";
 
 const productStore = useProductStore();
-
 const userStore = useUserStore();
 
 const props = defineProps({
@@ -76,9 +107,47 @@ const props = defineProps({
   },
 });
 
+defineEmits(["edit"]);
+
+const getUnitAbbr = (unit) => {
+  if (!unit) return "u";
+  const map = {
+    Unidad: "u",
+    Litros: "L",
+    Kilos: "kg",
+    Gramos: "g",
+  };
+  return map[unit] || "u";
+};
+
 const handleDelete = async (id) => {
-  if (confirm("¿Estás seguro de eliminar este producto?")) {
-    await productStore.deleteProducts(id);
+  const result = await Swal.fire({
+    title: "¿Estás seguro?",
+    text: "No podrás revertir esta acción",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#EF5350",
+    cancelButtonColor: "#E0E0E0",
+    confirmButtonText: "Sí, eliminar",
+    cancelButtonText: "Cancelar",
+    customClass: {
+      cancelButton: "text-gray-600",
+    },
+  });
+
+  if (result.isConfirmed) {
+    try {
+      await productStore.deleteProducts(id);
+      Swal.fire({
+        title: "¡Eliminado!",
+        text: "El producto ha sido eliminado.",
+        icon: "success",
+        timer: 1500,
+        showConfirmButton: false,
+      });
+    } catch (error) {
+      Swal.fire("Error", "No se pudo eliminar el producto", "error");
+    }
   }
 };
 
@@ -90,22 +159,27 @@ const formatPrice = (value) => {
 };
 
 const stockColorClass = computed(() => {
-  if (props.product.stock <= 0) return "text-red-500 bg-red-500";
-  if (props.product.stock < 5) return "text-orange-500 bg-orange-500";
-  return "text-emerald-500 bg-emerald-500";
+  const min = props.product.minStock || 5;
+  if (props.product.stock <= 0) return "text-red-500 bg-red-50 border-red-100";
+  if (props.product.stock <= min)
+    return "text-orange-500 bg-orange-50 border-orange-100";
+  return "text-green-600 bg-green-50 border-green-100";
 });
 
 const handleUpdateStock = async (change) => {
-  // 1. Evitar que el stock sea negativo antes de intentar la petición
-  const newStock = props.product.stock + change;
-  if (newStock < 0) return;
-
   try {
-    // 2. Deshabilitar botones o mostrar carga (opcional)
-    await productStore.updateProductStock(props.product.id, newStock);
+    const reason = change > 0 ? "reabastecimiento" : "venta";
+    await productStore.adjustStock(props.product, change, reason);
   } catch (error) {
-    console.error("Error al actualizar stock:", error);
-    // Podrías revertir el cambio localmente si falla
+    const Toast = Swal.mixin({
+      toast: true,
+      position: "top-end",
+      showConfirmButton: false,
+      timer: 3000,
+      icon: "info",
+      title: error.message,
+    });
+    Toast.fire();
   }
 };
 </script>

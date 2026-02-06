@@ -1,105 +1,184 @@
 <template>
-  <div class="min-h-screen bg-[#020617] text-slate-200 relative overflow-hidden">
-    <div class="absolute top-0 left-1/4 w-96 h-96 bg-blue-600/10 blur-[120px] rounded-full"></div>
-    <div class="absolute bottom-0 right-1/4 w-96 h-96 bg-indigo-600/5 blur-[120px] rounded-full"></div>
-
-    <nav class="sticky top-0 z-[100] bg-[#020617]/80 backdrop-blur-xl border-b border-white/[0.05] shadow-2xl">
-      <div class="max-w-[1200px] mx-auto px-6 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
+  <div
+    class="min-h-screen bg-gelato-cream text-gelato-chocolate relative overflow-hidden font-poppins pb-20"
+  >
+    <!-- Navbar -->
+    <nav
+      class="sticky top-0 z-[100] bg-white/80 backdrop-blur-xl border-b border-gray-100 shadow-sm"
+    >
+      <div
+        class="max-w-7xl mx-auto px-6 py-4 flex flex-col md:flex-row justify-between items-center gap-4"
+      >
         <div class="flex items-center gap-3">
-          <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl flex items-center justify-center shadow-[0_0_15px_rgba(37,99,235,0.3)]">
-            <span class="text-white font-black text-xl">I</span>
+          <div
+            class="w-10 h-10 rounded-full bg-gradient-to-tr from-gelato-cone to-orange-400 flex items-center justify-center text-white font-bold text-xl shadow-md"
+          >
+            G
           </div>
-          <h2 class="text-xl font-bold tracking-tight text-white">Inventario</h2>
+          <h2
+            class="text-xl font-playfair font-bold tracking-tight text-gelato-chocolate"
+          >
+            GelatoPro
+          </h2>
         </div>
 
-        <div class="w-full md:w-auto flex justify-between md:justify-start items-center gap-6">
-          <div class="flex items-center gap-3 px-3 py-1.5 bg-white/5 rounded-full border border-white/10">
-            <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-400 to-blue-600 flex items-center justify-center text-xs font-bold text-white shadow-inner">
-              {{ userInitial }}
-            </div>
-            <span class="hidden md:block text-slate-300 text-sm font-medium">
-              {{ userStore.userData?.email }}
-            </span>
+        <div
+          class="bg-gray-50 px-4 py-2 rounded-full border border-gray-100 flex items-center gap-4"
+        >
+          <div class="flex flex-col text-right leading-none">
+            <span class="text-xs font-bold text-gray-700">{{
+              userStore.userData?.email
+            }}</span>
+            <span class="text-[10px] text-gray-400 uppercase tracking-widest">{{
+              userStore.role
+            }}</span>
           </div>
           <button
             @click="handleLogout"
-            class="text-sm font-semibold text-blue-400 hover:text-white transition-colors duration-300"
+            class="text-xs font-bold text-red-400 hover:text-red-500 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg transition-colors"
           >
-            Cerrar sesión
+            SALIR
           </button>
         </div>
       </div>
     </nav>
 
-    <main class="max-w-[1200px] mx-auto p-6 md:p-12 relative z-10">
-      <header class="flex flex-col md:flex-row justify-between items-center mb-12 gap-6 animate-[fadeIn_0.8s_ease-out]">
-        <div class="text-center md:text-left">
-          <span class="text-blue-500 text-xs font-black uppercase tracking-[3px] mb-2 block">Dashboard</span>
-          <h1 class="text-4xl md:text-5xl font-black text-white tracking-tighter">
-            Panel de Inventario
+    <main class="max-w-7xl mx-auto p-6 md:p-12 relative z-10">
+      <!-- Header & Stats -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12 items-end">
+        <div class="lg:col-span-2">
+          <span
+            class="text-gelato-strawberry text-xs font-bold uppercase tracking-[3px] mb-2 block"
+            >Dashboard</span
+          >
+          <h1
+            class="text-4xl md:text-5xl font-playfair font-bold text-gelato-chocolate tracking-tight mb-4"
+          >
+            Panel de Control
           </h1>
+          <p class="text-gray-500 max-w-xl">
+            Gestiona tu inventario, visualiza el valor de tu bodega y controla
+            tus existencias críticas.
+          </p>
         </div>
 
-        <div class="flex flex-wrap justify-center gap-4 md:justify-end w-full md:w-auto">
-          <button
-            v-if="userStore.role === 'admin' || userStore.role === 'bodega'"
-            class="bg-blue-600 hover:bg-blue-500 text-white px-8 py-3.5 rounded-2xl font-bold text-sm flex items-center gap-2.5 transition-all duration-300 shadow-[0_15px_30px_-10px_rgba(37,99,235,0.5)] hover:-translate-y-1 active:translate-y-0"
-            @click="toogleForm"
-          >
-            <span class="text-lg">＋</span>
-            <span>{{ userStore.role === "admin" ? "Nuevo Producto" : "Ingresar Mercancía" }}</span>
-          </button>
-          
-          <button
-            v-if="userStore.role === 'admin'"
-            @click="toogleAdminForm"
-            class="bg-slate-800 hover:bg-slate-700 text-white px-8 py-3.5 rounded-2xl font-bold text-sm flex items-center gap-2.5 transition-all duration-300 border border-white/10 shadow-xl hover:-translate-y-1 active:translate-y-0"
-          >
-            <span>👥</span> Registrar Personal
-          </button>
+        <!-- Stats Card -->
+        <div class="bg-white p-6 rounded-3xl shadow-lg border border-gray-100">
+          <div class="flex justify-between items-start mb-2">
+            <div>
+              <p
+                class="text-gray-400 text-xs font-bold uppercase tracking-wider"
+              >
+                Capital en Bodega
+              </p>
+              <h3 class="text-3xl font-bold text-gelato-chocolate mt-1">
+                {{ formatCurrency(productStore.dashboardMetrics.capitalValue) }}
+              </h3>
+            </div>
+            <div
+              class="w-10 h-10 rounded-full bg-green-50 flex items-center justify-center text-green-600 text-xl font-bold"
+            >
+              $
+            </div>
+          </div>
+          <div class="text-xs text-gray-400">
+            Costo Total:
+            <span class="text-gray-600 font-semibold">{{
+              formatCurrency(productStore.dashboardMetrics.costValue)
+            }}</span>
+          </div>
         </div>
-      </header>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex flex-wrap gap-4 mb-8">
+        <button
+          v-if="userStore.role === 'admin' || userStore.role === 'bodega'"
+          class="bg-gelato-chocolate hover:bg-gray-800 text-white px-6 py-3 rounded-2xl font-bold text-sm flex items-center gap-2 transition-all shadow-lg hover:-translate-y-1"
+          @click="openForm(null)"
+        >
+          <span class="text-lg">＋</span> Nuevo Producto
+        </button>
+
+        <button
+          v-if="userStore.role === 'admin'"
+          @click="toogleAdminForm"
+          class="bg-white hover:bg-gray-50 text-gelato-chocolate px-6 py-3 rounded-2xl font-bold text-sm flex items-center gap-2 transition-all border border-gray-200 shadow-sm hover:shadow-md hover:-translate-y-1"
+        >
+          <span>👥</span> Registrar Personal
+        </button>
+      </div>
 
       <InventoryAlerts />
 
-      <section class="mt-12">
-        <div
-          v-if="productStore.loading"
-          class="flex flex-col items-center justify-center p-20 bg-white/[0.02] rounded-[32px] border border-dashed border-white/10"
+      <!-- Category Tabs -->
+      <div class="flex flex-wrap gap-3 mb-8 pb-4 border-b border-gray-100">
+        <button
+          @click="productStore.setActiveCategory('Todos')"
+          :class="[
+            'px-5 py-2 rounded-full text-sm font-bold transition-all',
+            productStore.activeCategory === 'Todos'
+              ? 'bg-gelato-chocolate text-white shadow-md'
+              : 'bg-white text-gray-500 hover:bg-gray-50',
+          ]"
         >
-          <div class="w-10 h-10 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin mb-4"></div>
-          <p class="text-slate-500 font-medium">Cargando inventario...</p>
+          Todo
+        </button>
+        <button
+          v-for="cat in productStore.categories"
+          :key="cat"
+          @click="productStore.setActiveCategory(cat)"
+          :class="[
+            'px-5 py-2 rounded-full text-sm font-bold transition-all',
+            productStore.activeCategory === cat
+              ? 'bg-gelato-cone text-gelato-chocolate shadow-md'
+              : 'bg-white text-gray-500 hover:bg-gray-50',
+          ]"
+        >
+          {{ cat }}
+        </button>
+      </div>
+
+      <!-- Inventory Grid -->
+      <section>
+        <div v-if="productStore.loading" class="flex justify-center p-20">
+          <div
+            class="w-10 h-10 border-4 border-gelato-cone/30 border-t-gelato-cone rounded-full animate-spin"
+          ></div>
         </div>
 
-        <div
-          v-else-if="productStore.products.length > 0"
-          class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8"
+        <TransitionGroup
+          name="list"
+          tag="div"
+          class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+          v-else-if="productStore.filteredProducts.length > 0"
         >
           <ProductCard
-            v-for="product in productStore.products"
+            v-for="product in productStore.filteredProducts"
             :key="product.id"
             :product="product"
-        
+            @edit="openForm"
           />
-        </div>
+        </TransitionGroup>
 
-        <div
-          v-else
-          class="text-center p-20 bg-white/[0.02] rounded-[32px] border border-dashed border-white/10"
-        >
-          <div class="text-5xl mb-4 opacity-50">📦</div>
-          <p class="text-slate-400 font-medium">No hay productos en el inventario. ¡Agrega el primero!</p>
+        <div v-else class="text-center p-20 opacity-50">
+          <p class="text-xl">No hay productos en esta categoría.</p>
         </div>
       </section>
 
+      <!-- Modals -->
       <Transition name="fade">
         <div
           v-if="showForm"
-          class="fixed inset-0 bg-[#020617]/90 backdrop-blur-md flex justify-center items-center z-[9999] p-6"
-          @click.self="toogleForm"
+          class="fixed inset-0 bg-gelato-chocolate/20 backdrop-blur-sm flex justify-center items-center z-[9999] p-6"
+          @click.self="closeForm"
         >
-          <div class="bg-slate-900 w-full max-w-[500px] rounded-[32px] border border-white/10 shadow-2xl p-2 animate-[modalPop_0.3s_ease-out]">
-            <ProductForm @close="toogleForm" />
+          <div class="animate-[modalPop_0.3s_ease-out]">
+            <ProductForm
+              :product="selectedProduct"
+              @close="closeForm"
+              @saved="productStore.getProducts()"
+            />
           </div>
         </div>
       </Transition>
@@ -107,10 +186,12 @@
       <Transition name="fade">
         <div
           v-if="showAdminForm"
-          class="fixed inset-0 bg-[#020617]/90 backdrop-blur-md flex justify-center items-center z-[9999] p-6"
+          class="fixed inset-0 bg-gelato-chocolate/20 backdrop-blur-sm flex justify-center items-center z-[9999] p-6"
           @click.self="toogleAdminForm"
         >
-          <div class="bg-slate-900 w-full max-w-[450px] rounded-[32px] border border-white/10 shadow-2xl animate-[modalPop_0.3s_ease-out]">
+          <div
+            class="bg-white w-full max-w-[450px] rounded-[32px] border border-gray-100 shadow-2xl animate-[modalPop_0.3s_ease-out] p-6"
+          >
             <AdminUserForm @close="toogleAdminForm" />
           </div>
         </div>
@@ -130,20 +211,24 @@ import AdminUserForm from "../components/admin/AdminUserForm.vue";
 import InventoryAlerts from "../components/admin/InventoryAlerts.vue";
 
 const productStore = useProductStore();
-
-onMounted(() => {
-  productStore.getProducts();
-});
-
 const userStore = useUserStore();
 const router = useRouter();
 
+onMounted(async () => {
+  await productStore.getProducts();
+  productStore.setActiveCategory("Helados"); // Default tab
+});
+
 const showForm = ref(false);
 const showAdminForm = ref(false);
+const selectedProduct = ref(null);
 
-const userInitial = computed(() => {
-  return userStore.userData?.email?.charAt(0).toUpperCase() || "U";
-});
+const formatCurrency = (val) => {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+  }).format(val);
+};
 
 const handleLogout = async () => {
   try {
@@ -154,8 +239,16 @@ const handleLogout = async () => {
   }
 };
 
-const toogleForm = () => {
-  showForm.value = !showForm.value;
+const openForm = (product = null) => {
+  selectedProduct.value = product;
+  showForm.value = true;
+};
+
+const closeForm = () => {
+  showForm.value = false;
+  setTimeout(() => {
+    selectedProduct.value = null;
+  }, 300);
 };
 
 const toogleAdminForm = () => {
@@ -164,26 +257,36 @@ const toogleAdminForm = () => {
 </script>
 
 <style scoped>
-.fade-enter-active, .fade-leave-active { transition: opacity 0.3s ease; }
-.fade-enter-from, .fade-leave-to { opacity: 0; }
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+.list-enter-active,
+.list-leave-active {
+  transition: all 0.4s ease;
+}
+.list-enter-from,
+.list-leave-to {
+  opacity: 0;
+  transform: translateY(20px);
+}
+.list-leave-active {
+  position: absolute; /* Ensures smooth removal */
+}
 
 @keyframes modalPop {
-  from { opacity: 0; transform: scale(0.9) translateY(-20px); }
-  to { opacity: 1; transform: scale(1) translateY(0); }
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
 }
-
-@keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-/* Scrollbar estética */
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
-::-webkit-scrollbar-thumb:hover { background: #2563eb; }
 </style>

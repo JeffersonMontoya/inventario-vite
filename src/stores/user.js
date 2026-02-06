@@ -1,101 +1,111 @@
-
 import { defineStore } from "pinia";
-import { auth, db } from "../firebase";
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
 } from "firebase/auth";
-import { doc, getDoc , setDoc } from "firebase/firestore";
+import { auth, db } from "../firebase";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 
 export const useUserStore = defineStore("user", {
   state: () => ({
+    user: null,
     userData: null,
-    loadingUser: false,
-    authReady: false,
     role: null,
+    loadingUser: false,
   }),
 
   actions: {
-    async registerUser(email, password, role) {
+    async registerUser(email, password, role = "vendedor") {
       this.loadingUser = true;
       try {
-        const { user } = await createUserWithEmailAndPassword(
+        const userCredential = await createUserWithEmailAndPassword(
           auth,
           email,
-          password
+          password,
         );
+        const user = userCredential.user;
 
         await setDoc(doc(db, "users", user.uid), {
-          email: email,
-          uid: user.uid,
+          email: user.email,
           role: role,
           createdAt: new Date(),
         });
 
-        console.log(`Usuario ${email} registrado como ${role}`);
+        this.userData = { email: user.email, uid: user.uid };
+        this.role = role;
       } catch (error) {
-        console.error("Error al registrar:", error);
+        console.error("Error registration:", error);
         throw error;
       } finally {
         this.loadingUser = false;
       }
     },
+
     async loginUser(email, password) {
       this.loadingUser = true;
       try {
-        const { user } = await signInWithEmailAndPassword(
+        const userCredential = await signInWithEmailAndPassword(
           auth,
           email,
-          password
+          password,
         );
-        this.userData = { email: user.email, uid: user.uid };
-        // FALTA ESTO:
-        await this.fetchUserRole(user.uid);
+        this.user = userCredential.user;
+        this.userData = {
+          email: userCredential.user.email,
+          uid: userCredential.user.uid,
+        };
+        await this.fetchUserRole(userCredential.user.uid);
+      } catch (error) {
+        console.error("Error login:", error);
+        throw error;
       } finally {
         this.loadingUser = false;
       }
     },
 
     async logoutUser() {
-      await signOut(auth);
-      this.userData = null;
+      try {
+        await signOut(auth);
+        this.user = null;
+        this.userData = null;
+        this.role = null;
+      } catch (error) {
+        console.log(error);
+      }
+    },
+
+    async fetchUserRole(uid) {
+      try {
+        const docRef = doc(db, "users", uid);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          this.role = docSnap.data().role;
+        } else {
+          this.role = "vendedor";
+        }
+      } catch (e) {
+        console.error("Error fetching role:", e);
+      }
     },
 
     listenAuthState() {
       return new Promise((resolve) => {
-        onAuthStateChanged(auth, async (user) => {
+        const unsubscribe = onAuthStateChanged(auth, async (user) => {
           if (user) {
+            this.user = user;
             this.userData = { email: user.email, uid: user.uid };
-
             await this.fetchUserRole(user.uid);
+            resolve(user);
           } else {
+            this.user = null;
             this.userData = null;
             this.role = null;
+            resolve(null);
           }
-          this.authReady = true;
-          resolve();
         });
       });
-    },
-
-    // funcion para hacder el trabajo sucio de ir a internet y buscar en firestore y traer el dato
-    async fetchUserRole(uid) {
-      try {
-        const docRef = doc(db, "users", uid); // Apuntamos al documento
-        const docSnap = await getDoc(docRef); // Pedimos el documento
-
-        if (docSnap.exists()) {
-          // Si el documento está ahí, guardamos el rol en el estado
-          this.role = docSnap.data().role;
-        } else {
-          // Si no existe, nos aseguramos de que sea null
-          this.role = null;
-        }
-      } catch (error) {
-        console.error("Error al pedir el rol:", error);
-      }
     },
   },
 });

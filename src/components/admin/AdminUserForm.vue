@@ -1,20 +1,23 @@
 <template>
-  <div class="p-6">
-    <div class="flex items-center justify-between mb-6">
-      <h2 class="text-2xl font-bold text-white">Registrar Personal</h2>
+  <div class="p-8">
+    <div class="flex items-center justify-between mb-8">
+      <h2 class="text-2xl font-playfair font-bold text-gelato-chocolate">
+        Registrar Personal
+      </h2>
 
       <button
         type="button"
         @click="$emit('close')"
-        class="flex items-center justify-center w-8 h-8 text-slate-400 hover:text-white transition-colors duration-300 rounded-md hover:bg-white/10"
+        class="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gelato-strawberry hover:bg-red-50 rounded-full transition-colors duration-300"
       >
-        <close-outlined style="font-size: 16px" />
+        <span class="text-xl font-bold">&times;</span>
       </button>
     </div>
 
-    <form @submit.prevent="handleSubmit" class="flex flex-col gap-4">
-      <div class="flex flex-col gap-1">
-        <label class="ml-1 text-xs font-semibold text-slate-400"
+    <form @submit.prevent="handleSubmit" class="flex flex-col gap-5">
+      <div class="flex flex-col gap-2">
+        <label
+          class="ml-1 text-xs font-bold text-gray-400 uppercase tracking-wider"
           >Email del Empleado</label
         >
         <input
@@ -22,43 +25,71 @@
           type="email"
           placeholder="correo@tienda.com"
           required
-          class="p-3 rounded-xl bg-[#020617] border border-white/10 text-white outline-none focus:border-emerald-500 transition-all"
+          class="bg-gray-50 border border-gray-200 text-gray-700 p-4 rounded-xl text-sm w-full outline-none transition-all duration-300 focus:bg-white focus:border-gelato-cone focus:ring-4 focus:ring-orange-100 placeholder:text-gray-400"
         />
       </div>
 
-      <div class="flex flex-col gap-1">
-        <label class="ml-1 text-xs font-semibold text-slate-400"
+      <div class="flex flex-col gap-2">
+        <label
+          class="ml-1 text-xs font-bold text-gray-400 uppercase tracking-wider"
           >Contraseña Temporal</label
         >
-        <input
-          v-model="password"
-          type="password"
-          placeholder="Mínimo 6 caracteres"
-          required
-          class="p-3 rounded-xl bg-[#020617] border border-white/10 text-white outline-none focus:border-emerald-500 transition-all"
-        />
+        <div class="relative group">
+          <input
+            v-model="password"
+            type="password"
+            placeholder="Mínimo 6 caracteres"
+            required
+            class="bg-gray-50 border border-gray-200 text-gray-700 p-4 rounded-xl text-sm w-full outline-none transition-all duration-300 focus:bg-white focus:border-gelato-cone focus:ring-4 focus:ring-orange-100 placeholder:text-gray-400"
+          />
+        </div>
       </div>
 
-      <div class="flex flex-col gap-1">
-        <label class="ml-1 text-xs font-semibold text-slate-400"
+      <div class="flex flex-col gap-2">
+        <label
+          class="ml-1 text-xs font-bold text-gray-400 uppercase tracking-wider"
           >Asignar Rol</label
         >
-        <select
-          v-model="role"
-          class="p-3 rounded-xl bg-[#020617] border border-white/10 text-white outline-none focus:border-emerald-500 transition-all cursor-pointer"
-        >
-          <option value="vendedor">🛍️ Vendedor</option>
-          <option value="bodega">📦 Bodega</option>
-          <option value="admin">🔑 Administrador</option>
-        </select>
+        <div class="relative">
+          <select
+            v-model="role"
+            class="bg-gray-50 border border-gray-200 text-gray-700 p-4 rounded-xl text-sm w-full outline-none transition-all duration-300 focus:bg-white focus:border-gelato-cone focus:ring-4 focus:ring-orange-100 appearance-none cursor-pointer"
+          >
+            <option value="vendedor">🛍️ Vendedor</option>
+            <option value="bodega">📦 Bodega</option>
+            <option value="admin">🔑 Administrador</option>
+          </select>
+          <div
+            class="absolute inset-y-0 right-4 flex items-center pointer-events-none text-gray-400"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-4 w-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M19 9l-7 7-7-7"
+              />
+            </svg>
+          </div>
+        </div>
       </div>
 
       <button
         type="submit"
         :disabled="userStore.loadingUser"
-        class="p-3 mt-4 font-bold text-white transition-all bg-emerald-600 hover:bg-emerald-500 rounded-xl disabled:opacity-50"
+        class="mt-4 bg-gradient-to-r from-gelato-chocolate to-gray-800 text-white p-4 rounded-xl font-bold text-base shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center gap-2"
       >
-        {{ userStore.loadingUser ? "Creando cuenta..." : "Confirmar Registro" }}
+        <span v-if="!userStore.loadingUser">Confirmar Registro</span>
+        <span
+          v-else
+          class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"
+        ></span>
       </button>
     </form>
   </div>
@@ -67,7 +98,7 @@
 <script setup>
 import { ref } from "vue";
 import { useUserStore } from "../../stores/user";
-import { CloseOutlined } from '@ant-design/icons-vue';
+import Swal from "sweetalert2";
 
 const userStore = useUserStore();
 const emit = defineEmits(["close"]);
@@ -79,10 +110,22 @@ const role = ref("vendedor");
 const handleSubmit = async () => {
   try {
     await userStore.registerUser(email.value, password.value, role.value);
-    alert("Usuario creado exitosamente");
+
+    Swal.fire({
+      icon: "success",
+      title: "¡Usuario Creado!",
+      text: "El nuevo miembro del equipo ha sido registrado.",
+      confirmButtonColor: "#3E2723",
+    });
+
     emit("close");
   } catch (error) {
-    alert("Error: " + error.message);
+    Swal.fire({
+      icon: "error",
+      title: "Error de registro",
+      text: error.message,
+      confirmButtonColor: "#EF5350",
+    });
   }
 };
 </script>

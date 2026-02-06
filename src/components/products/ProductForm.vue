@@ -1,140 +1,245 @@
 <template>
-  <div class="max-w-[480px] text-left relative">
-    <button 
+  <div
+    class="relative bg-white p-8 rounded-3xl shadow-xl border border-gray-100 max-w-[550px] max-h-[90vh] overflow-y-auto custom-scrollbar"
+  >
+    <button
       type="button"
-      @click="$emit('close')" 
-      class="absolute -top-2 -right-2 text-slate-400 hover:text-white hover:bg-white/10 w-9 h-9 rounded-full flex items-center justify-center transition-all z-20"
+      @click="$emit('close')"
+      class="absolute top-4 right-4 text-gray-400 hover:text-gelato-strawberry hover:bg-red-50 w-8 h-8 rounded-full flex items-center justify-center transition-all z-20"
     >
-      <span class="text-2xl">&times;</span>
+      <span class="text-2xl font-bold">&times;</span>
     </button>
 
-    <h3 class="text-white mb-7 text-[1.8rem] font-bold tracking-tight relative pb-2.5 text-center ...">
-      Agregar Producto
+    <h3
+      class="text-gelato-chocolate mb-6 text-2xl font-playfair font-bold tracking-tight text-center"
+    >
+      {{ product ? "Editar Producto" : "Nuevo Producto" }}
     </h3>
 
-    <div class="relative">
-      <form
-        @submit.prevent="handleSubmit"
-        class="flex flex-col gap-5 transition-all duration-400 ease-[cubic-bezier(0.4,0,0.2,1)]"
-        :class="{ 'blur-md grayscale-[0.5] opacity-30 pointer-events-none scale-[0.98]': isSuccess }"
-      >
+    <form @submit.prevent="handleSubmit" class="flex flex-col gap-5">
+      <!-- Nombre y Categoría -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div class="flex flex-col gap-2">
-          <label class="text-[0.75rem] font-bold text-slate-500 ml-1 uppercase tracking-wider">Nombre</label>
+          <label
+            class="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1"
+            >Nombre</label
+          >
           <input
-            v-model="name"
+            v-model="formData.name"
             type="text"
-            placeholder="Ej. Laptop Gaming"
+            placeholder="Ej. Gelato de Pistacho"
             required
-            class="bg-slate-900/60 backdrop-blur-md border border-slate-700/50 text-slate-50 p-[14px_18px] rounded-[14px] text-[15px] w-full outline-none transition-all duration-300 focus:border-blue-500 focus:bg-slate-900/90 focus:ring-4 focus:ring-blue-500/15 focus:-translate-y-px"
+            class="bg-gray-50 border border-gray-200 text-gray-700 p-4 rounded-xl text-sm w-full outline-none transition-all duration-300 focus:bg-white focus:border-gelato-cone focus:ring-4 focus:ring-orange-100 placeholder:text-gray-400"
           />
         </div>
+        <div class="flex flex-col gap-2">
+          <label
+            class="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1"
+            >Categoría</label
+          >
+          <select
+            v-model="formData.category"
+            required
+            class="bg-gray-50 border border-gray-200 text-gray-700 p-4 rounded-xl text-sm w-full outline-none transition-all duration-300 focus:bg-white focus:border-gelato-cone focus:ring-4 focus:ring-orange-100 cursor-pointer appearance-none"
+          >
+            <option disabled value="">Seleccionar...</option>
+            <option
+              v-for="cat in productStore.categories"
+              :key="cat"
+              :value="cat"
+            >
+              {{ cat }}
+            </option>
+          </select>
+        </div>
+      </div>
 
-        <div class="grid grid-cols-2 gap-[15px]">
-          <div class="flex flex-col gap-2">
-            <label class="text-[0.75rem] font-bold text-slate-500 ml-1 uppercase tracking-wider">Precio</label>
+      <!-- Precios y Costos -->
+      <div class="grid grid-cols-2 gap-4">
+        <div class="flex flex-col gap-2">
+          <label
+            class="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1"
+            >Precio Venta</label
+          >
+          <div class="relative">
+            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
+              >$</span
+            >
             <input
-              v-model="price"
+              v-model="formData.price"
               type="number"
               step="0.01"
               placeholder="0.00"
               required
-              class="bg-slate-900/60 backdrop-blur-md border border-slate-700/50 text-slate-50 p-[14px_18px] rounded-[14px] text-[15px] w-full outline-none transition-all duration-300 focus:border-blue-500 focus:bg-slate-900/90 focus:ring-4 focus:ring-blue-500/15 focus:-translate-y-px [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-            />
-          </div>
-          <div class="flex flex-col gap-2">
-            <label class="text-[0.75rem] font-bold text-slate-500 ml-1 uppercase tracking-wider">Stock</label>
-            <input 
-              v-model="stock" 
-              type="number" 
-              placeholder="0" 
-              required 
-              class="bg-slate-900/60 backdrop-blur-md border border-slate-700/50 text-slate-50 p-[14px_18px] rounded-[14px] text-[15px] w-full outline-none transition-all duration-300 focus:border-blue-500 focus:bg-slate-900/90 focus:ring-4 focus:ring-blue-500/15 focus:-translate-y-px [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+              class="bg-gray-50 border border-gray-200 text-gray-700 p-4 pl-8 rounded-xl text-sm w-full outline-none transition-all duration-300 focus:bg-white focus:border-gelato-cone focus:ring-4 focus:ring-orange-100"
             />
           </div>
         </div>
-
-        <button
-          type="submit"
-          :disabled="productStore.loading || isSuccess"
-          class="bg-gradient-to-br from-blue-600 to-blue-700 text-white border border-white/10 p-4 rounded-[14px] font-bold text-base mt-2.5 transition-all duration-300 flex justify-center items-center hover:not-disabled:brightness-110 hover:not-disabled:shadow-[0_0_20px_rgba(37,99,235,0.3),0_12px_24px_rgba(37,99,235,0.4)] hover:not-disabled:-translate-y-0.5 disabled:bg-slate-800 disabled:text-slate-500 disabled:cursor-not-allowed"
-        >
-          <span v-if="!productStore.loading">Guardar Producto</span>
-          <span v-else class="w-5 h-5 border-3 border-white/30 border-t-white rounded-full animate-spin"></span>
-        </button>
-      </form>
-
-      <Transition name="fade-in">
-        <div v-if="isSuccess" class="absolute inset-0 flex items-center justify-center z-10">
-          <div class="bg-slate-900/80 backdrop-blur-xl border border-emerald-500/40 p-[30px_20px] rounded-[24px] text-center shadow-[0_20px_50px_rgba(0,0,0,0.5)] max-w-[280px] success-card-anim">
-            <div class="w-14 h-14 bg-gradient-to-br from-emerald-500 to-emerald-600 text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4 shadow-[0_10px_20px_rgba(16,185,129,0.4)]">
-              ✓
-            </div>
-            <h4 class="text-emerald-500 text-xl font-bold mb-2">¡Producto Agregado!</h4>
-            <p class="text-slate-400 text-sm leading-relaxed">El inventario se ha actualizado correctamente.</p>
+        <div class="flex flex-col gap-2">
+          <label
+            class="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1"
+            >Costo (Unitario)</label
+          >
+          <div class="relative">
+            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
+              >$</span
+            >
+            <input
+              v-model="formData.costPrice"
+              type="number"
+              step="0.01"
+              placeholder="0.00"
+              class="bg-gray-50 border border-gray-200 text-gray-700 p-4 pl-8 rounded-xl text-sm w-full outline-none transition-all duration-300 focus:bg-white focus:border-gelato-cone focus:ring-4 focus:ring-orange-100"
+            />
           </div>
         </div>
-      </Transition>
-    </div>
+      </div>
+
+      <!-- Stock y Unidades -->
+      <div class="grid grid-cols-3 gap-4">
+        <div class="flex flex-col gap-2">
+          <label
+            class="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1"
+            >Stock</label
+          >
+          <input
+            v-model="formData.stock"
+            type="number"
+            placeholder="0"
+            required
+            class="bg-gray-50 border border-gray-200 text-gray-700 p-4 rounded-xl text-sm w-full outline-none transition-all duration-300 focus:bg-white focus:border-gelato-cone focus:ring-4 focus:ring-orange-100"
+          />
+        </div>
+        <div class="flex flex-col gap-2">
+          <label
+            class="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1"
+            >Mínimo</label
+          >
+          <input
+            v-model="formData.minStock"
+            type="number"
+            placeholder="5"
+            class="bg-gray-50 border border-gray-200 text-gray-700 p-4 rounded-xl text-sm w-full outline-none transition-all duration-300 focus:bg-white focus:border-gelato-cone focus:ring-4 focus:ring-orange-100"
+          />
+        </div>
+        <div class="flex flex-col gap-2">
+          <label
+            class="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1"
+            >Unidad</label
+          >
+          <select
+            v-model="formData.unit"
+            class="bg-gray-50 border border-gray-200 text-gray-700 p-4 rounded-xl text-sm w-full outline-none transition-all duration-300 focus:bg-white focus:border-gelato-cone focus:ring-4 focus:ring-orange-100 cursor-pointer appearance-none"
+          >
+            <option value="Unidad">Unidad</option>
+            <option value="Litros">Litros</option>
+            <option value="Kilos">Kilos</option>
+            <option value="Gramos">Gramos</option>
+          </select>
+        </div>
+      </div>
+
+      <button
+        type="submit"
+        :disabled="productStore.loading"
+        class="bg-gradient-to-r from-gelato-cone to-orange-500 text-white border-none p-4 rounded-xl font-bold text-base mt-2 shadow-lg shadow-orange-200 hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 flex justify-center items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+      >
+        <span v-if="!productStore.loading">{{
+          product ? "Actualizar Producto" : "Guardar Producto"
+        }}</span>
+        <span
+          v-else
+          class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"
+        ></span>
+      </button>
+    </form>
   </div>
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { reactive, watch } from "vue";
 import { useProductStore } from "../../stores/product";
+import Swal from "sweetalert2";
 
 const productStore = useProductStore();
 
-const name = ref("");
-const price = ref(null);
-const stock = ref(null);
-const isSuccess = ref(false);
+const props = defineProps({
+  product: {
+    type: Object,
+    default: null,
+  },
+});
 
+const emit = defineEmits(["close", "saved"]);
+
+const formData = reactive({
+  name: "",
+  category: "",
+  price: null,
+  costPrice: null,
+  stock: null,
+  minStock: 5,
+  unit: "Unidad",
+});
+
+const populateForm = () => {
+  if (props.product) {
+    formData.name = props.product.name;
+    formData.category = props.product.category || "Helados";
+    formData.price = props.product.price;
+    formData.costPrice = props.product.costPrice || 0;
+    formData.stock = props.product.stock;
+    formData.minStock = props.product.minStock || 5;
+    formData.unit = props.product.unit || "Unidad";
+  } else {
+    // Reset defaults
+    formData.name = "";
+    formData.category = "Helados";
+    formData.price = null;
+    formData.costPrice = null;
+    formData.stock = null;
+    formData.minStock = 5;
+    formData.unit = "Unidad";
+  }
+};
+
+watch(() => props.product, populateForm, { immediate: true });
 
 const handleSubmit = async () => {
   try {
-    await productStore.addProduct(name.value, price.value, stock.value);
-    isSuccess.value = true;
-    
-    name.value = "";
-    price.value = null;
-    stock.value = null;
+    if (props.product) {
+      await productStore.updateProduct(props.product.id, { ...formData });
+      Swal.fire({
+        icon: "success",
+        title: "¡Actualizado!",
+        timer: 1500,
+        showConfirmButton: false,
+      });
+    } else {
+      await productStore.addProduct({ ...formData });
+      Swal.fire({
+        icon: "success",
+        title: "¡Creado!",
+        timer: 1500,
+        showConfirmButton: false,
+      });
+    }
 
-    setTimeout(() => {
-      isSuccess.value = false;
-    }, 3000);
+    emit("saved");
+    emit("close");
   } catch (error) {
     console.error(error);
+    Swal.fire({ icon: "error", title: "Error", text: "No se pudo guardar." });
   }
 };
 </script>
 
 <style scoped>
-.fade-in-enter-active,
-.fade-in-leave-active {
-  transition: opacity 0.4s ease;
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
 }
-.fade-in-enter-from,
-.fade-in-leave-to {
-  opacity: 0;
-}
-
-.fade-in-enter-active .success-card-anim {
-  animation: cardPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-@keyframes cardPop {
-  0% {
-    transform: scale(0.5) translateY(20px);
-    opacity: 0;
-  }
-  100% {
-    transform: scale(1) translateY(0);
-    opacity: 1;
-  }
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(18px); }
-  to { opacity: 1; transform: translateY(0); }
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #eee;
+  border-radius: 10px;
 }
 </style>
