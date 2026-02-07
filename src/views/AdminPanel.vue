@@ -105,6 +105,15 @@
             <h2 class="text-lg font-bold font-playfair text-gray-800">
               🕵️ Últimos Movimientos
             </h2>
+            <div class="flex gap-2">
+              <button
+                @click="exportLogs"
+                class="text-[10px] bg-white border border-purple-100 px-2 py-1 rounded-lg font-bold text-purple-600 hover:bg-purple-50 transition-colors"
+                title="Descargar historial en CSV"
+              >
+                📥 Exportar
+              </button>
+            </div>
           </div>
 
           <div class="overflow-x-auto">
@@ -120,7 +129,7 @@
               </thead>
               <tbody>
                 <tr
-                  v-for="log in productStore.logs"
+                  v-for="log in filteredLogs"
                   :key="log.id"
                   class="bg-white border-b hover:bg-gray-50 transition-colors"
                 >
@@ -308,9 +317,10 @@
               Visualiza pérdidas y ajustes negativos de inventario.
             </p>
             <button
+              @click="toggleLossFilter"
               class="bg-red-500 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-lg shadow-red-200 hover:bg-red-600 transition-colors"
             >
-              Ver Reporte
+              {{ showingOnlyLosses ? "Ver Todo" : "Ver Reporte" }}
             </button>
           </div>
         </div>
@@ -350,7 +360,7 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from "vue";
+import { onMounted, ref, computed } from "vue";
 import { useProductStore } from "../stores/product";
 import { useUserStore } from "../stores/user";
 import { useRouter } from "vue-router";
@@ -365,6 +375,48 @@ const router = useRouter();
 const showForm = ref(false);
 const showAdminForm = ref(false);
 const selectedProduct = ref(null);
+const showingOnlyLosses = ref(false);
+
+const filteredLogs = computed(() => {
+  if (showingOnlyLosses.value) {
+    return productStore.logs.filter(
+      (log) =>
+        log.type === "pérdida" || (log.type === "venta" && log.quantity < 0),
+    );
+  }
+  return productStore.logs;
+});
+
+const toggleLossFilter = () => {
+  showingOnlyLosses.value = !showingOnlyLosses.value;
+  if (showingOnlyLosses.value) {
+    const tableElement = document.querySelector("table");
+    tableElement?.scrollIntoView({ behavior: "smooth" });
+  }
+};
+
+const exportLogs = () => {
+  const headers = "Fecha,Usuario,Producto,Tipo,Cantidad\n";
+  const rows = productStore.logs
+    .map(
+      (log) =>
+        `${formatDate(log.timestamp)},${log.userEmail},${log.productName},${log.type},${log.quantity}`,
+    )
+    .join("\n");
+
+  const blob = new Blob([headers + rows], { type: "text/csv;charset=utf-8;" });
+  const link = document.createElement("a");
+  const url = URL.createObjectURL(blob);
+  link.setAttribute("href", url);
+  link.setAttribute(
+    "download",
+    `movimientos_inventario_${new Date().toLocaleDateString()}.csv`,
+  );
+  link.style.visibility = "hidden";
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+};
 
 onMounted(async () => {
   await productStore.getProducts();
