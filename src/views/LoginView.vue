@@ -105,9 +105,9 @@
         <button
           type="submit"
           class="mt-4 w-full p-4 bg-gradient-to-r from-gelato-cone to-orange-500 text-white border-none rounded-xl text-lg font-bold shadow-lg shadow-orange-200 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center gap-3"
-          :disabled="userStore.loadingUser"
+          :disabled="loading"
         >
-          <span v-if="!userStore.loadingUser">Iniciar Sesión</span>
+          <span v-if="!loading">Iniciar Sesión</span>
           <div v-else class="flex items-center gap-2">
             <svg
               class="w-5 h-5 text-white animate-spin"
@@ -155,71 +155,8 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
-import { useUserStore } from "../stores/user";
-import { useRouter } from "vue-router";
-import Swal from "sweetalert2";
-
-const userStore = useUserStore();
-const router = useRouter();
-
-const email = ref("");
-const password = ref("");
-
-const handleLogin = async () => {
-  if (!email.value || !password.value) {
-    Swal.fire({
-      icon: "warning",
-      title: "Campos vacíos",
-      text: "Por favor, completa todos los campos para continuar.",
-      confirmButtonColor: "#FFB74D",
-    });
-    return;
-  }
-
-  try {
-    await userStore.loginUser(email.value, password.value);
-
-    // Success toast
-    const Toast = Swal.mixin({
-      toast: true,
-      position: "top-end",
-      showConfirmButton: false,
-      timer: 3000,
-      timerProgressBar: true,
-      didOpen: (toast) => {
-        toast.addEventListener("mouseenter", Swal.stopTimer);
-        toast.addEventListener("mouseleave", Swal.resumeTimer);
-      },
-    });
-
-    Toast.fire({
-      icon: "success",
-      title: "¡Bienvenido de nuevo!",
-    });
-
-    router.push("/home");
-  } catch (error) {
-    console.error("Error de autenticación:", error.code);
-    let errorMessage = "Credenciales incorrectas.";
-
-    if (
-      error.code === "auth/user-not-found" ||
-      error.code === "auth/wrong-password"
-    ) {
-      errorMessage = "Usuario o contraseña incorrectos.";
-    } else if (error.code === "auth/too-many-requests") {
-      errorMessage = "Demasiados intentos fallidos. Intenta más tarde.";
-    }
-
-    Swal.fire({
-      icon: "error",
-      title: "Error de acceso",
-      text: errorMessage,
-      confirmButtonColor: "#EF5350",
-    });
-  }
-};
+import { useLogin } from "../composables/useLogin";
+const { email, password, handleLogin, loading } = useLogin();
 </script>
 
 <style scoped>
