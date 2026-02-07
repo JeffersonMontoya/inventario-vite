@@ -20,19 +20,30 @@
       </div>
     </div>
 
-    <div class="flex items-center gap-4">
+    <div class="flex items-center gap-6">
+      <div class="flex flex-col items-end">
+        <p
+          class="text-[10px] text-gray-400 font-bold uppercase tracking-widest leading-none mb-1"
+        >
+          Ventas de Hoy
+        </p>
+        <span class="text-lg font-black text-emerald-600 font-mono">{{
+          formatCurrency(sessionTotal)
+        }}</span>
+      </div>
+
       <button
         @click="$emit('report')"
         class="bg-emerald-100 text-emerald-700 px-4 py-2 rounded-xl text-sm font-bold hover:bg-emerald-200 transition-colors flex items-center gap-2"
       >
-        🕒 Cierre de Turno
+        🕒 Reporte
       </button>
 
       <div class="hidden md:flex flex-col text-right">
         <span class="text-xs font-bold text-gray-700">{{ userEmail }}</span>
-        <span class="text-[10px] text-green-500 uppercase tracking-widest"
-          >Vendedor</span
-        >
+        <span class="text-[10px] text-green-500 uppercase tracking-widest">{{
+          userStore.role
+        }}</span>
       </div>
       <button
         @click="$emit('logout')"
@@ -58,12 +69,23 @@
 </template>
 
 <script setup>
+import { useFormatters } from "../../composables/useFormatters";
+import { useUserStore } from "../../stores/user";
+
+const userStore = useUserStore();
+
 defineProps({
   userEmail: {
     type: String,
     required: true,
   },
+  sessionTotal: {
+    type: Number,
+    default: 0,
+  },
 });
 
 defineEmits(["logout", "report"]);
+
+const { formatCurrency } = useFormatters();
 </script>

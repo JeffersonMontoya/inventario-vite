@@ -23,9 +23,9 @@
     <div class="flex items-center gap-4">
       <div class="hidden md:flex flex-col text-right">
         <span class="text-xs font-bold text-gray-700">{{ userEmail }}</span>
-        <span class="text-[10px] text-purple-500 uppercase tracking-widest"
-          >Administrador</span
-        >
+        <span class="text-[10px] text-purple-500 uppercase tracking-widest">{{
+          userStore.role
+        }}</span>
       </div>
       <button
         @click="$emit('logout')"
@@ -51,6 +51,10 @@
 </template>
 
 <script setup>
+import { useUserStore } from "../../stores/user";
+
+const userStore = useUserStore();
+
 defineProps({
   userEmail: {
     type: String,

@@ -23,14 +23,21 @@ export const useProductStore = defineStore("product", {
     categories: ["Helados", "Toppings", "Bebidas", "Materia Prima", "Insumos"],
     activeCategory: "Todos",
     logs: [],
-    cart: [], // New Cart State
-    dailyStats: { totalSales: "$0.00", netProfit: "$0.00", avgTicket: "$0.00" }, // Added dailyStats
+    dailyStats: { totalSales: "$0.00", raw: 0 },
+    accumulatedStats: { totalSales: "$0.00", raw: 0 },
+    sellerStats: [], // { name, total }
+    cart: [], // Shared cart state
   }),
 
   getters: {
     // Filtrado dinámico
     filteredProducts: (state) => {
       if (state.activeCategory === "Todos") return state.products;
+      if (state.activeCategory === "Critico") {
+        return state.products.filter(
+          (p) => Number(p.stock) <= Number(p.minStock || 5),
+        );
+      }
       return state.products.filter((p) => p.category === state.activeCategory);
     },
 
@@ -70,8 +77,6 @@ export const useProductStore = defineStore("product", {
     dailyMetrics: (state) =>
       state.dailyStats || {
         totalSales: "$0.00",
-        netProfit: "$0.00",
-        avgTicket: "$0.00",
       },
   },
 
@@ -81,43 +86,77 @@ export const useProductStore = defineStore("product", {
     },
 
     async getDailyStats() {
+      const { useUserStore } = await import("./user");
+      const userStore = useUserStore();
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
-      const salesQuery = query(
+      // 1. Daily Query (Everyone can see their own contribution or total if rules allow)
+      const dailyQuery = query(
         collection(db, "sales"),
         where("timestamp", ">=", today),
       );
 
-      // Listening in real-time
-      onSnapshot(salesQuery, (snap) => {
-        let total = 0;
-        let cost = 0;
+      onSnapshot(
+        dailyQuery,
+        (snap) => {
+          let total = 0;
+          let perSeller = {};
 
-        snap.forEach((doc) => {
-          const data = doc.data();
-          total += Number(data.total || 0);
-          cost += Number(data.totalCost || 0);
-        });
+          snap.forEach((doc) => {
+            const data = doc.data();
+            const amount = Number(data.total || 0);
+            total += amount;
 
-        const netProfit = total - cost;
-        const avg = snap.size > 0 ? total / snap.size : 0;
+            // Per Seller Logic (Daily)
+            const userId = data.userId || "Desconocido";
+            perSeller[userId] = (perSeller[userId] || 0) + amount;
+          });
 
-        this.dailyStats = {
-          totalSales: new Intl.NumberFormat("en-US", {
-            style: "currency",
-            currency: "USD",
-          }).format(total),
-          netProfit: new Intl.NumberFormat("en-US", {
-            style: "currency",
-            currency: "USD",
-          }).format(netProfit),
-          avgTicket: new Intl.NumberFormat("en-US", {
-            style: "currency",
-            currency: "USD",
-          }).format(avg),
-        };
-      });
+          this.dailyStats = {
+            raw: total,
+            totalSales: new Intl.NumberFormat("en-US", {
+              style: "currency",
+              currency: "USD",
+            }).format(total),
+          };
+
+          // ADMIN ONLY: Seller Stats
+          if (userStore.role === "admin") {
+            this.sellerStats = Object.entries(perSeller)
+              .map(([uid, sum]) => ({ uid, total: sum }))
+              .sort((a, b) => b.total - a.total);
+          }
+        },
+        (error) => {
+          console.error("Error in daily stats listener:", error);
+        },
+      );
+
+      // 2. Accumulated Query (ADMIN ONLY)
+      if (userStore.role === "admin") {
+        const allSalesQuery = query(collection(db, "sales"));
+        onSnapshot(
+          allSalesQuery,
+          (snap) => {
+            let grandTotal = 0;
+            snap.forEach(
+              (doc) => (grandTotal += Number(doc.data().total || 0)),
+            );
+
+            this.accumulatedStats = {
+              raw: grandTotal,
+              totalSales: new Intl.NumberFormat("en-US", {
+                style: "currency",
+                currency: "USD",
+              }).format(grandTotal),
+            };
+          },
+          (error) => {
+            console.error("Error in accumulated stats listener:", error);
+          },
+        );
+      }
     },
 
     async getProducts() {
@@ -156,12 +195,23 @@ export const useProductStore = defineStore("product", {
     },
 
     // --- CART ACTIONS ---
-    addToCart(product) {
+    addToCart(product, quantity = 1) {
       const existing = this.cart.find((item) => item.id === product.id);
       if (existing) {
-        existing.quantity++;
+        existing.quantity += quantity;
       } else {
-        this.cart.push({ ...product, quantity: 1 });
+        this.cart.push({ ...product, quantity: quantity });
+      }
+    },
+
+    updateCartQuantity(productId, newQuantity) {
+      const index = this.cart.findIndex((item) => item.id === productId);
+      if (index !== -1) {
+        if (newQuantity <= 0) {
+          this.cart.splice(index, 1);
+        } else {
+          this.cart[index].quantity = newQuantity;
+        }
       }
     },
 

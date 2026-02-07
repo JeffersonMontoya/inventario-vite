@@ -6,9 +6,45 @@
     />
 
     <main class="max-w-7xl mx-auto p-6">
+      <!-- Dashboard Principal: 2x2 Layout -->
+      <section class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8 items-stretch">
+        <MetricsPanel
+          :metrics="productStore.dailyStats"
+          :accumulated="productStore.accumulatedStats"
+          :seller-stats="productStore.sellerStats"
+        />
+        <RecentSalesTable />
+        <StaffListTable @edit-staff="handleEditStaff" />
+        <div
+          class="bg-white p-6 rounded-[32px] shadow-sm border border-emerald-50 flex flex-col items-center justify-center text-center relative overflow-hidden group min-h-[200px]"
+        >
+          <div
+            class="absolute -top-10 -right-10 w-40 h-40 bg-emerald-50 rounded-full blur-3xl group-hover:bg-emerald-100 transition-colors"
+          ></div>
+          <div class="relative z-10">
+            <span
+              class="text-4xl mb-3 block transform group-hover:scale-110 transition-transform"
+              >🏆</span
+            >
+            <p
+              class="text-[9px] font-black text-emerald-500 uppercase tracking-[0.3em] mb-1"
+            >
+              Producto Estrella
+            </p>
+            <h4 class="text-xl font-black text-gray-800 font-playfair">
+              {{ getTopProduct().name }}
+            </h4>
+            <div
+              class="mt-3 px-3 py-1 bg-emerald-500 text-white rounded-full text-[10px] font-bold inline-block"
+            >
+              {{ getTopProduct().qty }} Unidades Vendidas
+            </div>
+          </div>
+        </div>
+      </section>
+
       <!-- Panel de Auditoría -->
-      <section class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-        <MetricsPanel :metrics="productStore.dailyMetrics" />
+      <section class="grid grid-cols-1 gap-8 mb-8">
         <LogsTable
           :logs="filteredLogs"
           :get-log-type-class="getLogTypeClass"
@@ -48,6 +84,7 @@
         :showing-only-losses="showingOnlyLosses"
         @toggle-admin-form="toggleAdminForm"
         @toggle-loss-filter="toggleLossFilter"
+        @toggle-product-form="openForm(null)"
       />
 
       <!-- Modals -->
@@ -76,7 +113,10 @@
           <div
             class="bg-white w-full max-w-[450px] rounded-[32px] border border-gray-100 shadow-2xl animate-[modalPop_0.3s_ease-out] p-6"
           >
-            <AdminUserForm @close="toggleAdminForm" />
+            <AdminUserForm
+              :initial-data="editingStaff"
+              @close="closeUserForm"
+            />
           </div>
         </div>
       </Transition>
@@ -93,6 +133,8 @@ import { useFormatters } from "../composables/useFormatters";
 // Components
 import AdminHeader from "../components/admin/AdminHeader.vue";
 import MetricsPanel from "../components/admin/MetricsPanel.vue";
+import RecentSalesTable from "../components/admin/RecentSalesTable.vue";
+import StaffListTable from "../components/admin/StaffListTable.vue";
 import LogsTable from "../components/admin/LogsTable.vue";
 import InventoryGrid from "../components/admin/InventoryGrid.vue";
 import ActionCards from "../components/admin/ActionCards.vue";
@@ -118,6 +160,38 @@ const {
 } = useAdmin();
 
 const { formatDate } = useFormatters();
+
+import { ref } from "vue";
+const editingStaff = ref(null);
+
+const handleEditStaff = (staff) => {
+  editingStaff.value = staff;
+  showAdminForm.value = true;
+};
+
+const closeUserForm = () => {
+  showAdminForm.value = false;
+  editingStaff.value = null;
+};
+
+const getTopProduct = () => {
+  // This is simple logic, ideally this comes from a proper report
+  // but we can compute it from the logs we have
+  const productCounts = {};
+  productStore.logs.forEach((log) => {
+    if (log.type === "venta") {
+      const qty = Math.abs(log.quantity);
+      productCounts[log.productName] =
+        (productCounts[log.productName] || 0) + qty;
+    }
+  });
+
+  const entries = Object.entries(productCounts);
+  if (entries.length === 0) return { name: "Sin Ventas", qty: 0 };
+
+  entries.sort((a, b) => b[1] - a[1]);
+  return { name: entries[0][0], qty: entries[0][1] };
+};
 
 const exportLogs = () => {
   const headers = "Fecha,Usuario,Producto,Tipo,Cantidad\n";

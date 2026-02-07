@@ -1,8 +1,14 @@
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { useProductStore } from "../stores/product";
 import { useUserStore } from "../stores/user";
 import { db } from "../firebase";
-import { collection, query, where, getDocs } from "firebase/firestore";
+import {
+  collection,
+  query,
+  where,
+  getDocs,
+  onSnapshot,
+} from "firebase/firestore";
 import Swal from "sweetalert2";
 import { useFormatters } from "./useFormatters";
 
@@ -12,12 +18,74 @@ export function usePOS() {
   const { formatCurrency } = useFormatters();
 
   const activeCategory = ref("Helados");
-  const saleCategories = ["Helados", "Bebidas", "Toppings", "Insumos"];
+  const searchQuery = ref("");
+  const sessionTotal = ref(0);
+  const saleCategories = [
+    "Favoritos",
+    "Helados",
+    "Bebidas",
+    "Toppings",
+    "Insumos",
+  ];
+
+  // Initialize favorites from localStorage
+  const favorites = ref(
+    JSON.parse(localStorage.getItem("gelato_favorites") || "[]"),
+  );
+
+  const toggleFavorite = (productId) => {
+    const index = favorites.value.indexOf(productId);
+    if (index === -1) favorites.value.push(productId);
+    else favorites.value.splice(index, 1);
+    localStorage.setItem("gelato_favorites", JSON.stringify(favorites.value));
+  };
+
+  onMounted(() => {
+    // ... existing onMounted logic ...
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    let filterDate = today;
+    if (userStore.lastShiftClosedAt) {
+      const closedDate = new Date(userStore.lastShiftClosedAt.seconds * 1000);
+      if (closedDate > today) filterDate = closedDate;
+    }
+
+    const q = query(
+      collection(db, "sales"),
+      where("userId", "==", userStore.userData?.uid),
+      where("timestamp", ">", filterDate),
+    );
+
+    onSnapshot(q, (snap) => {
+      let total = 0;
+      snap.forEach((doc) => {
+        total += doc.data().total || 0;
+      });
+      sessionTotal.value = total;
+    });
+  });
 
   const filteredProducts = computed(() => {
-    return productStore.products.filter(
-      (p) => p.category === activeCategory.value,
-    );
+    let base = productStore.products;
+
+    // Search Filter
+    if (searchQuery.value) {
+      const query = searchQuery.value.toLowerCase();
+      base = base.filter(
+        (p) =>
+          p.name.toLowerCase().includes(query) ||
+          p.category.toLowerCase().includes(query),
+      );
+      return base;
+    }
+
+    // Category Filter
+    if (activeCategory.value === "Favoritos") {
+      return base.filter((p) => favorites.value.includes(p.id));
+    }
+
+    return base.filter((p) => p.category === activeCategory.value);
   });
 
   const getProductEmoji = (cat) => {
@@ -27,8 +95,8 @@ export function usePOS() {
     return "📦";
   };
 
-  const addToCart = (product) => {
-    productStore.addToCart(product);
+  const addToCart = (product, quantity) => {
+    productStore.addToCart(product, quantity);
   };
 
   const showShiftReport = async (onLogout) => {
@@ -86,8 +154,9 @@ export function usePOS() {
         cancelButtonText: "Continuar Vendiendo",
         confirmButtonColor: "#059669",
         background: "#ffffff",
-      }).then((result) => {
+      }).then(async (result) => {
         if (result.isConfirmed) {
+          await userStore.updateLastShiftClosure();
           onLogout();
         }
       });
@@ -102,10 +171,14 @@ export function usePOS() {
 
   return {
     activeCategory,
+    searchQuery,
+    favorites,
+    sessionTotal,
     saleCategories,
     filteredProducts,
     getProductEmoji,
     addToCart,
+    toggleFavorite,
     showShiftReport,
     loadProducts,
   };

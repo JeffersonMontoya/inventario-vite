@@ -12,7 +12,9 @@ export const useUserStore = defineStore("user", {
   state: () => ({
     user: null,
     userData: null,
+    users: [],
     role: null,
+    lastShiftClosedAt: null,
     loadingUser: false,
   }),
 
@@ -28,18 +30,31 @@ export const useUserStore = defineStore("user", {
         const user = userCredential.user;
 
         await setDoc(doc(db, "users", user.uid), {
+          uid: user.uid,
           email: user.email,
           role: role,
           createdAt: new Date(),
         });
 
-        this.userData = { email: user.email, uid: user.uid };
-        this.role = role;
+        // Refetch users after registration
+        await this.getUsers();
       } catch (error) {
         console.error("Error registration:", error);
         throw error;
       } finally {
         this.loadingUser = false;
+      }
+    },
+
+    async getUsers() {
+      try {
+        const { getDocs, collection, query, orderBy } =
+          await import("firebase/firestore");
+        const q = query(collection(db, "users"), orderBy("createdAt", "desc"));
+        const snap = await getDocs(q);
+        this.users = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      } catch (e) {
+        console.error("Error fetching users:", e);
       }
     },
 
@@ -81,7 +96,9 @@ export const useUserStore = defineStore("user", {
         const docRef = doc(db, "users", uid);
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
-          this.role = docSnap.data().role;
+          const data = docSnap.data();
+          this.role = data.role;
+          this.lastShiftClosedAt = data.lastShiftClosedAt || null;
         } else {
           this.role = "vendedor";
         }
@@ -106,6 +123,22 @@ export const useUserStore = defineStore("user", {
           }
         });
       });
+    },
+
+    async updateLastShiftClosure() {
+      if (!this.userData?.uid) return;
+      try {
+        const { updateDoc, doc, serverTimestamp } =
+          await import("firebase/firestore");
+        const now = new Date();
+        const docRef = doc(db, "users", this.userData.uid);
+        await updateDoc(docRef, {
+          lastShiftClosedAt: serverTimestamp(),
+        });
+        this.lastShiftClosedAt = { seconds: Math.floor(now.getTime() / 1000) };
+      } catch (e) {
+        console.error("Error updating closure:", e);
+      }
     },
   },
 });

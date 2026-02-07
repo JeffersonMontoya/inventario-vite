@@ -211,10 +211,8 @@
         <div class="mt-8 pt-8 border-t border-gray-100">
           <p class="text-gray-400 text-sm text-center">
             ¿No tienes una cuenta de empleado?
-            <router-link
-              to="/register"
-              class="text-gelato-chocolate hover:underline font-bold"
-              >Solicitar Acceso</router-link
+            <span class="text-gelato-chocolate font-bold ml-1"
+              >Contacta al Administrador</span
             >
           </p>
         </div>
