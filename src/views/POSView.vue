@@ -23,6 +23,13 @@
       </div>
 
       <div class="flex items-center gap-4">
+        <button
+          @click="showShiftReport"
+          class="bg-emerald-100 text-emerald-700 px-4 py-2 rounded-xl text-sm font-bold hover:bg-emerald-200 transition-colors flex items-center gap-2"
+        >
+          🕒 Cierre de Turno
+        </button>
+
         <div class="hidden md:flex flex-col text-right">
           <span class="text-xs font-bold text-gray-700">{{
             userStore.userData?.email
@@ -53,81 +60,109 @@
       </div>
     </header>
 
-    <main class="max-w-7xl mx-auto p-6">
-      <!-- Tabs Categorías de Venta -->
-      <div class="flex overflow-x-auto gap-3 pb-6 mb-2 no-scrollbar">
-        <button
-          v-for="cat in saleCategories"
-          :key="cat"
-          @click="activeCategory = cat"
-          :class="[
-            'whitespace-nowrap px-6 py-3 rounded-2xl font-bold text-sm transition-all transform active:scale-95',
-            activeCategory === cat
-              ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-200 ring-2 ring-emerald-100'
-              : 'bg-white text-gray-500 hover:bg-green-50',
-          ]"
-        >
-          {{ cat }}
-        </button>
-      </div>
-
-      <!-- Grid de Productos -->
-      <div
-        v-if="filteredProducts.length > 0"
-        class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"
-      >
-        <div
-          v-for="product in filteredProducts"
-          :key="product.id"
-          @click="handleQuickSale(product)"
-          class="group bg-white rounded-[32px] p-6 cursor-pointer border border-transparent hover:border-emerald-200 hover:shadow-xl hover:shadow-emerald-100/50 transition-all duration-300 relative overflow-hidden active:scale-95"
-        >
+    <main class="max-w-7xl mx-auto p-6 h-[calc(100vh-80px)] overflow-hidden">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full">
+        <!-- Columna Izquierda: Catálogo -->
+        <div class="lg:col-span-2 flex flex-col h-full overflow-hidden">
+          <!-- Tabs Categorías -->
           <div
-            class="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-emerald-100 to-transparent rounded-bl-[100px] -mr-4 -mt-4 transition-transform group-hover:scale-110"
-          ></div>
-
-          <div
-            class="relative z-10 flex flex-col h-full items-center text-center"
+            class="flex overflow-x-auto gap-3 pb-4 mb-2 no-scrollbar shrink-0"
           >
+            <button
+              v-for="cat in saleCategories"
+              :key="cat"
+              @click="activeCategory = cat"
+              :class="[
+                'whitespace-nowrap px-6 py-3 rounded-2xl font-bold text-sm transition-all transform active:scale-95',
+                activeCategory === cat
+                  ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-200 ring-2 ring-emerald-100'
+                  : 'bg-white text-gray-500 hover:bg-green-50',
+              ]"
+            >
+              {{ cat }}
+            </button>
+          </div>
+
+          <!-- Grid Productos -->
+          <div class="flex-1 overflow-y-auto pr-2 custom-scrollbar">
             <div
-              class="text-6xl mb-4 transform group-hover:-translate-y-2 transition-transform duration-300 drop-shadow-sm"
+              v-if="filteredProducts.length > 0"
+              class="grid grid-cols-2 md:grid-cols-3 gap-4 pb-20"
             >
-              {{ getProductEmoji(product.category) }}
-            </div>
-
-            <h3
-              class="font-playfair font-bold text-gray-800 text-lg leading-tight mb-2 group-hover:text-emerald-700 transition-colors"
-            >
-              {{ product.name }}
-            </h3>
-
-            <div class="mt-auto flex flex-col gap-1 w-full">
-              <span class="text-2xl font-black text-emerald-600 font-poppins">
-                {{ formatPrice(product.price) }}
-              </span>
-              <span
+              <div
+                v-for="product in filteredProducts"
+                :key="product.id"
+                @click="product.stock > 0 ? addToCart(product) : null"
                 :class="[
-                  'text-xs font-bold px-3 py-1 rounded-full w-max mx-auto',
-                  product.stock > 5
-                    ? 'bg-green-100 text-green-700'
-                    : 'bg-red-100 text-red-700',
+                  'group rounded-[24px] p-4 border border-transparent transition-all duration-300 relative overflow-hidden active:scale-95',
+                  product.stock > 0
+                    ? 'bg-white cursor-pointer hover:border-emerald-200 hover:shadow-xl hover:shadow-emerald-100/50'
+                    : 'bg-gray-100 cursor-not-allowed opacity-60 grayscale',
                 ]"
               >
-                Stock: {{ product.stock }}
-              </span>
+                <!-- Stock Badge -->
+                <span
+                  :class="[
+                    'absolute top-3 right-3 text-[10px] font-bold px-2 py-1 rounded-full z-20',
+                    product.stock > 10
+                      ? 'bg-green-100 text-green-700'
+                      : product.stock > 0
+                        ? 'bg-orange-100 text-orange-700'
+                        : 'bg-red-100 text-red-700',
+                  ]"
+                >
+                  {{ product.stock > 0 ? product.stock + " u" : "Sin Stock" }}
+                </span>
+
+                <div
+                  class="relative z-10 flex flex-col h-full items-center text-center"
+                >
+                  <div
+                    class="text-4xl mb-3 transform transition-transform duration-300"
+                    :class="
+                      product.stock > 0 ? 'group-hover:-translate-y-1' : ''
+                    "
+                  >
+                    {{ getProductEmoji(product.category) }}
+                  </div>
+
+                  <h3
+                    class="font-playfair font-bold text-gray-800 text-sm leading-tight mb-1 transition-colors line-clamp-2"
+                    :class="
+                      product.stock > 0 ? 'group-hover:text-emerald-700' : ''
+                    "
+                  >
+                    {{ product.name }}
+                  </h3>
+
+                  <span
+                    class="text-lg font-black font-poppins mt-auto"
+                    :class="
+                      product.stock > 0 ? 'text-emerald-600' : 'text-gray-400'
+                    "
+                  >
+                    {{ formatPrice(product.price) }}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div
+              v-else
+              class="flex flex-col items-center justify-center py-20 opacity-50 h-full"
+            >
+              <div class="text-6xl mb-4">🔍</div>
+              <p class="text-xl font-bold text-emerald-900">
+                No hay productos en esta categoría
+              </p>
             </div>
           </div>
         </div>
-      </div>
 
-      <div
-        v-else
-        class="flex flex-col items-center justify-center py-20 opacity-50"
-      >
-        <div class="text-6xl mb-4">💤</div>
-        <p class="text-xl font-bold text-emerald-900">
-          No hay productos disponibles para venta
-        </p>
+        <!-- Columna Derecha: Carrito -->
+        <div class="h-full overflow-hidden">
+          <SalesCart />
+        </div>
       </div>
     </main>
   </div>
@@ -138,6 +173,9 @@ import { ref, computed, onMounted } from "vue";
 import { useProductStore } from "../stores/product";
 import { useUserStore } from "../stores/user";
 import { useRouter } from "vue-router";
+import SalesCart from "../components/pos/SalesCart.vue";
+import { db } from "../firebase";
+import { collection, query, where, getDocs } from "firebase/firestore";
 import Swal from "sweetalert2";
 
 const productStore = useProductStore();
@@ -145,7 +183,7 @@ const userStore = useUserStore();
 const router = useRouter();
 
 const activeCategory = ref("Helados");
-const saleCategories = ["Helados", "Bebidas", "Toppings"];
+const saleCategories = ["Helados", "Bebidas", "Toppings", "Insumos"];
 
 onMounted(() => {
   productStore.getProducts();
@@ -153,7 +191,7 @@ onMounted(() => {
 
 const filteredProducts = computed(() => {
   return productStore.products.filter(
-    (p) => p.category === activeCategory.value && p.stock > 0,
+    (p) => p.category === activeCategory.value,
   );
 });
 
@@ -169,29 +207,73 @@ const formatPrice = (val) =>
     val,
   );
 
-const handleQuickSale = async (product) => {
-  if (product.stock <= 0) return;
+const addToCart = (product) => {
+  productStore.addToCart(product);
+};
 
+const showShiftReport = async () => {
   try {
-    // 1 click sale flow
-    await productStore.adjustStock(product, -1, "venta");
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
-    // Toast de éxito discreto
-    const Toast = Swal.mixin({
-      toast: true,
-      position: "bottom-center",
-      showConfirmButton: false,
-      timer: 1500,
-      background: "#064E3B",
-      color: "#fff",
+    // Fetch only sales of THIS user today
+    const salesQuery = query(
+      collection(db, "sales"),
+      where("userId", "==", userStore.userData.uid),
+      where("timestamp", ">=", today),
+    );
+
+    const snap = await getDocs(salesQuery);
+    let cash = 0;
+    let card = 0;
+    let productsMap = {};
+
+    snap.forEach((doc) => {
+      const data = doc.data();
+      if (data.paymentMethod === "Efectivo") cash += data.total;
+      else card += data.total;
+
+      data.products.forEach((p) => {
+        productsMap[p.name] = (productsMap[p.name] || 0) + p.quantity;
+      });
     });
 
-    Toast.fire({
-      icon: "success",
-      title: `¡Venta de ${product.name} registrada!`,
+    const topProducts = Object.entries(productsMap)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 3)
+      .map(([name, qty]) => `${name} (${qty}u)`)
+      .join("<br>");
+
+    Swal.fire({
+      title: "📜 Cierre de Turno",
+      html: `
+                <div class="text-left space-y-4">
+                    <div class="p-3 bg-emerald-50 rounded-xl">
+                        <p class="text-xs font-bold text-emerald-600 uppercase">Efectivo en Caja</p>
+                        <p class="text-xl font-black text-emerald-900">${formatPrice(cash)}</p>
+                    </div>
+                    <div class="p-3 bg-blue-50 rounded-xl">
+                        <p class="text-xs font-bold text-blue-600 uppercase">Ventas con Tarjeta</p>
+                        <p class="text-xl font-black text-blue-900">${formatPrice(card)}</p>
+                    </div>
+                    <div class="mt-4">
+                        <p class="text-xs font-bold text-gray-400 uppercase mb-2">Top 3 Productos</p>
+                        <p class="text-sm font-bold text-gray-700">${topProducts || "Sin ventas hoy"}</p>
+                    </div>
+                </div>
+            `,
+      confirmButtonText: "Cerrar Turno y Salir",
+      showCancelButton: true,
+      cancelButtonText: "Continuar Vendiendo",
+      confirmButtonColor: "#059669",
+      background: "#ffffff",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        handleLogout();
+      }
     });
-  } catch (error) {
-    Swal.fire({ icon: "error", title: "Error", text: error.message });
+  } catch (e) {
+    Swal.fire("Error", "No se pudo generar el reporte", "error");
   }
 };
 
@@ -208,5 +290,12 @@ const handleLogout = async () => {
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #d1fae5;
+  border-radius: 4px;
 }
 </style>

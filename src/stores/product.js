@@ -18,11 +18,13 @@ import { db, auth } from "../firebase";
 
 export const useProductStore = defineStore("product", {
   state: () => ({
-    loading: false,
     products: [],
+    loading: false,
     categories: ["Helados", "Toppings", "Bebidas", "Materia Prima", "Insumos"],
-    activeCategory: "Helados",
+    activeCategory: "Todos",
     logs: [],
+    cart: [], // New Cart State
+    dailyStats: { totalSales: "$0.00", netProfit: "$0.00", avgTicket: "$0.00" }, // Added dailyStats
   }),
 
   getters: {
@@ -45,30 +47,77 @@ export const useProductStore = defineStore("product", {
 
     // Métricas Financieras y de Stock
     dashboardMetrics: (state) => {
-      const totalCapital = state.products.reduce(
-        (acc, p) => acc + p.stock * (p.price || 0),
+      const lowCount = state.products.filter(
+        (p) => p.stock <= (p.minStock || 5) && p.stock > 0,
+      ).length;
+      const outCount = state.products.filter((p) => p.stock <= 0).length;
+      const capitalValue = state.products.reduce(
+        (acc, p) => acc + (Number(p.price) || 0) * Number(p.stock),
         0,
       );
-      const totalCost = state.products.reduce(
-        (acc, p) => acc + p.stock * (p.costPrice || 0),
+      const costValue = state.products.reduce(
+        (acc, p) => acc + (Number(p.costPrice) || 0) * Number(p.stock),
         0,
       );
 
       return {
-        totalProducts: state.products.length,
-        capitalValue: totalCapital, // Precio Venta Total
-        costValue: totalCost, // Costo Total
-        lowCount: state.products.filter(
-          (p) => p.stock <= (p.minStock || 5) && p.stock > 0,
-        ).length,
-        outCount: state.products.filter((p) => p.stock <= 0).length,
+        lowCount,
+        outCount,
+        capitalValue,
+        costValue,
       };
     },
+    dailyMetrics: (state) =>
+      state.dailyStats || {
+        totalSales: "$0.00",
+        netProfit: "$0.00",
+        avgTicket: "$0.00",
+      },
   },
 
   actions: {
     setActiveCategory(category) {
       this.activeCategory = category;
+    },
+
+    async getDailyStats() {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const salesQuery = query(
+        collection(db, "sales"),
+        where("timestamp", ">=", today),
+      );
+
+      // Listening in real-time
+      onSnapshot(salesQuery, (snap) => {
+        let total = 0;
+        let cost = 0;
+
+        snap.forEach((doc) => {
+          const data = doc.data();
+          total += Number(data.total || 0);
+          cost += Number(data.totalCost || 0);
+        });
+
+        const netProfit = total - cost;
+        const avg = snap.size > 0 ? total / snap.size : 0;
+
+        this.dailyStats = {
+          totalSales: new Intl.NumberFormat("en-US", {
+            style: "currency",
+            currency: "USD",
+          }).format(total),
+          netProfit: new Intl.NumberFormat("en-US", {
+            style: "currency",
+            currency: "USD",
+          }).format(netProfit),
+          avgTicket: new Intl.NumberFormat("en-US", {
+            style: "currency",
+            currency: "USD",
+          }).format(avg),
+        };
+      });
     },
 
     async getProducts() {
@@ -92,34 +141,178 @@ export const useProductStore = defineStore("product", {
     },
 
     async getLogs() {
+      const logsQuery = query(
+        collectionGroup(db, "inventoryLogs"),
+        orderBy("timestamp", "desc"),
+      );
+
+      onSnapshot(logsQuery, (snapshot) => {
+        this.logs = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+          userEmail: doc.data().userEmail || doc.data().userId,
+        }));
+      });
+    },
+
+    // --- CART ACTIONS ---
+    addToCart(product) {
+      const existing = this.cart.find((item) => item.id === product.id);
+      if (existing) {
+        existing.quantity++;
+      } else {
+        this.cart.push({ ...product, quantity: 1 });
+      }
+    },
+
+    removeFromCart(productId) {
+      const index = this.cart.findIndex((item) => item.id === productId);
+      if (index !== -1) {
+        if (this.cart[index].quantity > 1) {
+          this.cart[index].quantity--;
+        } else {
+          this.cart.splice(index, 1);
+        }
+      }
+    },
+
+    clearCart() {
+      this.cart = [];
+    },
+
+    // --- CHECKOUT PROCESS (TRANSACTION) ---
+    async processSale(paymentMethod, userId) {
+      if (this.cart.length === 0) throw new Error("Carrito vacío");
+
       this.loading = true;
       try {
-        const logsQuery = query(
-          collectionGroup(db, "inventoryLogs"),
-          orderBy("timestamp", "desc"),
-        ); // Fetch from all subcollections
-        const snapshot = await getDocs(logsQuery);
+        await runTransaction(db, async (transaction) => {
+          // 1. Identify Consumables needed
+          const consumables = ["Vaso", "Cuchara", "Servilleta", "Cono"];
+          const consumableProducts = this.products.filter(
+            (p) =>
+              consumables.some((c) =>
+                p.name.toLowerCase().includes(c.toLowerCase()),
+              ) && p.category === "Insumos",
+          );
 
-        // Map logs and potentially fetch user emails if not stored directly
-        // For efficiency, we will store userId and try to map it, or rely on future improvements to store email in log.
+          // 2. Prepare Reads (Refs)
+          const productRefs = [];
+          const cartMap = new Map(); // id -> quantity needed
 
-        /* 
-              Note: Firestore collectionGroup queries require an index. 
-              If this fails, the console will provide a link to create it.
-            */
+          // Main products
+          for (const item of this.cart) {
+            const ref = doc(db, "products", item.id);
+            productRefs.push({ ref, type: "product", id: item.id });
+            cartMap.set(item.id, item.quantity);
+          }
 
-        this.logs = snapshot.docs.map((doc) => {
-          const data = doc.data();
-          return {
-            id: doc.id,
-            ...data,
-            // If we don't have userEmail stored, we might show userId.
-            // Ideally, store email in logMovement.
-            userEmail: data.userEmail || data.userId,
-          };
+          // Consumables (only if Helados are in cart)
+          const heladosCount = this.cart
+            .filter((i) => i.category === "Helados")
+            .reduce((acc, i) => acc + i.quantity, 0);
+
+          if (heladosCount > 0) {
+            for (const cons of consumableProducts) {
+              const ref = doc(db, "products", cons.id);
+              productRefs.push({ ref, type: "consumable", id: cons.id });
+            }
+          }
+
+          // 3. Execute Reads
+          const docs = await Promise.all(
+            productRefs.map((p) => transaction.get(p.ref)),
+          );
+
+          // 4. Validate & Logic
+          const updates = [];
+
+          docs.forEach((docSnap, index) => {
+            if (!docSnap.exists())
+              throw new Error(
+                "Producto no encontrado: " + productRefs[index].id,
+              );
+
+            const data = docSnap.data();
+            const refInfo = productRefs[index];
+            let newStock = data.stock;
+
+            if (refInfo.type === "product") {
+              const qty = cartMap.get(refInfo.id);
+              if (data.stock < qty)
+                throw new Error(`Stock insuficiente para ${data.name}`);
+              newStock -= qty;
+            } else if (refInfo.type === "consumable") {
+              // Deduct 1 per helado sold
+              if (data.stock < heladosCount)
+                throw new Error(`Insumo insuficiente: ${data.name}`);
+              newStock -= heladosCount;
+            }
+
+            updates.push({ ref: refInfo.ref, newStock });
+          });
+
+          // 5. Writes
+          // Update Stocks and Create Logs
+          for (const up of updates) {
+            transaction.update(up.ref, { stock: up.newStock });
+
+            // Log movement for each product update
+            const logRef = doc(collection(up.ref, "inventoryLogs"));
+            const productInfo = productRefs.find((p) => p.id === up.ref.id);
+            const originalDoc =
+              docs[productRefs.findIndex((p) => p.id === up.ref.id)];
+            const productName = originalDoc.data().name;
+
+            transaction.set(logRef, {
+              productId: up.ref.id,
+              productName: productName,
+              quantity:
+                productInfo.type === "product"
+                  ? -cartMap.get(up.ref.id)
+                  : -heladosCount,
+              type: "venta",
+              userId: userId,
+              userEmail: auth.currentUser?.email || "anon",
+              timestamp: serverTimestamp(),
+            });
+          }
+
+          // Create Sale Record
+          const total = this.cart.reduce(
+            (sum, item) => sum + item.price * item.quantity,
+            0,
+          );
+          const totalCost = this.cart.reduce(
+            (sum, item) => sum + (item.costPrice || 0) * item.quantity,
+            0,
+          );
+
+          const saleRef = doc(collection(db, "sales"));
+          transaction.set(saleRef, {
+            products: this.cart.map((i) => ({
+              id: i.id,
+              name: i.name,
+              price: i.price,
+              cost: i.costPrice || 0,
+              quantity: i.quantity,
+            })),
+            subtotal: Number(total.toFixed(2)),
+            taxes: 0, // Simplified tax logic
+            total: Number(total.toFixed(2)),
+            totalCost: Number(totalCost.toFixed(2)),
+            paymentMethod: paymentMethod,
+            userId: userId,
+            timestamp: serverTimestamp(),
+          });
         });
-      } catch (error) {
-        console.error("Error fetching logs:", error);
+
+        this.clearCart();
+        this.getProducts(); // Refresh local state
+        return true;
+      } catch (e) {
+        console.error("Transacción fallida:", e);
+        throw e;
       } finally {
         this.loading = false;
       }
